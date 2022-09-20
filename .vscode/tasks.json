@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "gradle",
+            "id": "c:\\Users\\Claudio\\libgdx-projects\\isometric-game-1desktop:rundesktop",
+            "script": "desktop:run",
+            "description": "",
+            "group": "other",
+            "project": "desktop",
+            "buildFile": "C:\\Users\\Claudio\\libgdx-projects\\isometric-game-1\\desktop\\build.gradle",
+            "rootProject": "isometric-game-1",
+            "projectFolder": "c:\\Users\\Claudio\\libgdx-projects\\isometric-game-1",
+            "workspaceFolder": "c:\\Users\\Claudio\\libgdx-projects\\isometric-game-1",
+            "args": "",
+            "javaDebug": false,
+            "problemMatcher": ["$gradle"],
+            "label": "gradle: desktop:run"
+        }
+    ]
+}
