@@ -1,31 +1,26 @@
 package com.mygdx.isometricgame1;
 
-import javax.swing.text.Position;
+import java.util.HashMap;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.mygdx.isometricgame1.FacingDirection;
 
 public class GameScreen implements Screen {
-    /**
-     *
-     */
+
     private IsometricGame1 game;
     private OrthographicCamera camera;
     private final int VIEWPORT_WIDTH = 1600;
@@ -35,56 +30,61 @@ public class GameScreen implements Screen {
     private TiledMap map;
     private MapRenderer mapRenderer;
     private final float cameraSpeed = 20;
-    private int mapWidth;
-    private int mapHeight;
-    private Vector2 positionScreen;
+    private Vector2 positionScreen; // general use buffer for transformed iso coordinates
     private TiledIsoTransformation transformation;
     // TODO refactor these and other constants into game class to remove duplication
     private final float SCREEN_OFFSET_CORRECTION_X = 0.5f;
     private final float SCREEN_OFFSET_CORRECTION_Y = -0.5f;
-    // idle animation
-    private TextureRegion[] idleFrames;
-    private Texture idleSheet;
-    private final int IDLE_COLS = 5;
-    private final int IDLE_ROWS = 1;
-    private Texture workerTexture;
-    private Vector2 workerPosition;
-    private FacingDirection workerFacingDirection = FacingDirection.SOUTH;
-    private Vector2 workerDirection;
-    private UnitState workerState = UnitState.IDLE;
-    private Vector2 workerTargetPosition;
-    private final float WORKER_SPEED = 2.5f;
-    private static final float ARRIVED_TO_TARGET_DISTANCE = 0.1f;
+    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.1f;
+
+    // ant animation
+    private final int FACING_DIRECTION_AMOUNT = 16;
+    private final int SPRITE_DIRECTION_AMOUNT = 9;
+    private TextureAtlas antWalkingAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-walking.atlas"));
+    private HashMap<Integer, Animation<TextureRegion>> antWalkingAnimations;
+    private final float FRAME_DURATION = 1 / 30f;
+    private float elapsedTime = 0;
+    private Vector2 antPosition;
+    private Vector2 antDirectionVector;
+    private int antFacingDirection; // 0-15
+    private UnitState AntState = UnitState.WALKING;
+    private Vector2 antTargetPostion;
+    private final float ANT_SPEED = 1.4f;
+    private final int WALKING_COLS = 7;
+    private final int WALKING_ROWS = 25;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
-    public GameScreen(IsometricGame1 game) {
+    public GameScreen(
+            IsometricGame1 game) {
         this.game = game;
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.setToOrtho(false);
         map = new TmxMapLoader().load("maps/map-1.tmx");
         mapRenderer = new MapRenderer(map);
-        MapProperties props = map.getProperties();
-        mapWidth = (int) props.get("width");
-        mapHeight = (int) props.get("height");
-
-        workerPosition = new Vector2(15, 10);
         transformation = new TiledIsoTransformation(TILE_WIDTH, TILE_HEIGHT);
-        workerTexture = new Texture(Gdx.files.internal("sprites/worker.png"));
-        idleSheet = new Texture(Gdx.files.internal("sprites/worker-idle.png"));
-        /*
-         * Create a 2d array of texture regions from the sprite sheet
-         */
-        TextureRegion[][] sheetBuffer = TextureRegion.split(idleSheet, idleSheet.getWidth() / IDLE_COLS,
-                idleSheet.getHeight() / 1);
-        idleFrames = new TextureRegion[IDLE_COLS * IDLE_ROWS];
-        int frameIndex = 0;
-        for (int i = 0; i < IDLE_ROWS; i++) {
-            for (int j = 0; j < IDLE_COLS; j++) {
-                idleFrames[frameIndex++] = sheetBuffer[i][j];
-            }
+
+        // ant
+        antWalkingAnimations = new HashMap<Integer, Animation<TextureRegion>>();
+        // init directions 0-8
+        for (int i = 0; i < SPRITE_DIRECTION_AMOUNT; i++) {
+            antWalkingAnimations.put(i, new Animation<TextureRegion>(FRAME_DURATION,
+                    antWalkingAtlas.findRegions("walking-" + i), PlayMode.LOOP));
         }
-        workerDirection = new Vector2();
-        workerTargetPosition = new Vector2();
+        // init directions with flipped sprites for directions 9-15
+        int animationIndex = 9;
+        // we need to store again references to sprites for directions 1-7
+        for (int i = 7; i > 0; i--) {
+            antWalkingAnimations.put(animationIndex++, antWalkingAnimations.get(i));
+        }
+        // check that animations where loaded in correct order
+        for (int i = 0; i < FACING_DIRECTION_AMOUNT; i++) {
+            System.out.println(antWalkingAnimations.get(i));
+        }
+
+        antPosition = new Vector2(15, 10);
+        antDirectionVector = new Vector2();
+        antTargetPostion = new Vector2();
+        antFacingDirection = 0;
     }
 
     @Override
@@ -97,28 +97,30 @@ public class GameScreen implements Screen {
         ScreenUtils.clear(Color.BLACK);
         camera.update();
         game.spriteBatch.setProjectionMatrix(camera.combined);
-        positionScreen = transformation.transform(workerPosition.x, workerPosition.y);
 
-        if (workerState == UnitState.WALKING) {
-            // update worker position given its moving direction
-            workerPosition.x += WORKER_SPEED * workerDirection.x * delta;
-            workerPosition.y += WORKER_SPEED * workerDirection.y * delta;
+        // ant walking
+        elapsedTime += delta;
+        if (AntState == UnitState.WALKING) {
+            antPosition.x += ANT_SPEED * antDirectionVector.x * delta;
+            antPosition.y += ANT_SPEED * antDirectionVector.y * delta;
 
-            // check if worker has reached target position
-            float distanceToTarget = workerPosition.dst(workerTargetPosition);
-            // Gdx.app.log("distance to target", "" + distanceToTarget);
-            if (distanceToTarget <= ARRIVED_TO_TARGET_DISTANCE) {
+            float distanceToTarget = antPosition.dst(antTargetPostion);
+
+            if (distanceToTarget <= ARRIVED_TO_TARGET_POSITION_DISTANCE) {
                 /*
-                 * TODO this will probably have to be adjusted to take the uniti size into
+                 * TODO this check will probably have to be adjusted to take the unit size into
                  * consideration when I start checkin for collisions
                  */
-                workerState = UnitState.IDLE;
+                // TODO add idle animation
+                AntState = UnitState.IDLE;
             }
-
         }
+
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        renderIdleWorker(game.spriteBatch, workerFacingDirection, idleFrames, workerPosition);
+        // renderIdleWorker(game.spriteBatch, workerFacingDirection, idleFrames,
+        // workerPosition);
+        renderAnt(game.spriteBatch, antPosition, antFacingDirection, antWalkingAnimations, elapsedTime);
         game.spriteBatch.end();
 
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
@@ -143,45 +145,64 @@ public class GameScreen implements Screen {
         }
 
         if (Gdx.input.justTouched()) {
-            workerTargetPosition = clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera);
+            antTargetPostion = clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera);
+            AntState = UnitState.WALKING;
+            antDirectionVector.set(antTargetPostion);
+            antDirectionVector.sub(antPosition).nor();
+            float angle = MathUtils.radiansToDegrees * MathUtils.atan2(antDirectionVector.y, antDirectionVector.x);
 
-            Gdx.app.log("targetLocation", "x:" + workerTargetPosition.x + ",y: " + workerTargetPosition.y);
-            workerState = UnitState.WALKING;
-            workerDirection.set(workerTargetPosition);
-            workerDirection.sub(workerPosition).nor();
-            float workerAngle = MathUtils.radiansToDegrees * MathUtils.atan2(workerDirection.y, workerDirection.x);
-            Gdx.app.log("worker angle", "" + workerAngle);
-            if (workerAngle >= -22.5f && workerAngle < 22.5f)
-                workerFacingDirection = FacingDirection.SOUTHEAST;
-            else if (workerAngle >= 22.5f && workerAngle < 67.5f)
-                workerFacingDirection = FacingDirection.EAST;
-            else if (workerAngle >= 67.5f && workerAngle < 112.5f)
-                workerFacingDirection = FacingDirection.NORTHEAST;
-            else if (workerAngle >= 112.5f && workerAngle < 157.5f)
-                workerFacingDirection = FacingDirection.NORTH;
-            else if (workerAngle >= 157.5f && workerAngle < 180.0f || workerAngle >= -180f && workerAngle < -157.5f)
-                workerFacingDirection = FacingDirection.NORTHWEST;
-            else if (workerAngle >= -157.5f && workerAngle < -112.5f)
-                workerFacingDirection = FacingDirection.WEST;
-            else if (workerAngle >= -112.5f && workerAngle < -67.5f)
-                workerFacingDirection = FacingDirection.SOUTHWEST;
-            else if (workerAngle >= -67.5f && workerAngle < -22.5f)
-                workerFacingDirection = FacingDirection.SOUTH;
-
-            Gdx.app.log("worker direction", "x:" + workerDirection.x + ",y: " + workerDirection.y);
-
-            // projectedClick = viewport.project(new Vector2(clickX, clickY));
+            if (angle >= 146.25 && angle < 168.75)
+                antFacingDirection = 15;
+            else if (angle >= 168.75 && angle < 180.0 || angle >= -180 && angle < -168.75)
+                antFacingDirection = 14;
+            else if (angle >= -168.75 && angle < -146.25)
+                antFacingDirection = 13;
+            else if (angle >= -146.25 && angle < -123.75)
+                antFacingDirection = 12;
+            else if (angle >= -123.75 && angle < -101.25)
+                antFacingDirection = 11;
+            else if (angle >= -101.25 && angle < -78.75)
+                antFacingDirection = 10;
+            else if (angle >= -78.75 && angle < -56.25)
+                antFacingDirection = 9;
+            else if (angle >= -56.25 && angle < -33.75)
+                antFacingDirection = 8;
+            else if (angle >= -33.75 && angle < -11.25)
+                antFacingDirection = 7;
+            else if (angle >= -11.25 && angle < 11.25)
+                antFacingDirection = 6;
+            else if (angle >= -11.25 && angle < 33.75)
+                antFacingDirection = 5;
+            else if (angle >= 33.75 && angle < 56.25)
+                antFacingDirection = 4;
+            else if (angle >= 56.25 && angle < 78.75)
+                antFacingDirection = 3;
+            else if (angle >= 78.75 && angle < 101.25)
+                antFacingDirection = 2;
+            else if (angle >= 101.25 && angle < 123.75)
+                antFacingDirection = 1;
+            else if (angle >= 123.75 && angle < 146.25)
+                antFacingDirection = 0;
         }
-        /*
-         * game.hudBatch.begin();
-         * game.font.draw(game.hudBatch, "clickX: " + clickX, 100, 100);
-         * game.font.draw(game.hudBatch, "projected clickX: " + projectedClick.x, 100,
-         * 85);
-         * game.font.draw(game.hudBatch, "clickY: " + clickY, 100, 60);
-         * game.font.draw(game.hudBatch, "projected clickY: " + projectedClick.y, 100,
-         * 45);
-         * game.hudBatch.end();
-         */
+
+    }
+
+    private void renderAnt(SpriteBatch batch, Vector2 position, int facingDirection,
+            HashMap<Integer, Animation<TextureRegion>> antWalkingAnimations, float elapsedTime) {
+
+        boolean flipX = false;
+        if (facingDirection >= 9 && facingDirection < FACING_DIRECTION_AMOUNT) {
+            flipX = true;
+        }
+        // TODO overload transform method to receive a Vector2
+        positionScreen = transformation.transform(position.x, position.y);
+        TextureRegion currentFrame = antWalkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+        batch.draw(currentFrame.getTexture(), positionScreen.x, positionScreen.y,
+                currentFrame.getRegionWidth() / 2, 0,
+                currentFrame.getTexture().getWidth() / WALKING_COLS,
+                currentFrame.getTexture().getHeight() / WALKING_ROWS, 1, 1, 0,
+                currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
+                currentFrame.getRegionHeight(), flipX, false);
     }
 
     @Override
@@ -218,47 +239,4 @@ public class GameScreen implements Screen {
 
         return new Vector2(mapX, mapY);
     }
-
-    private void renderIdleWorker(SpriteBatch batch, FacingDirection facingDirection, TextureRegion[] frames,
-            Vector2 positionIso) {
-        positionScreen = transformation.transform(positionIso.x, positionIso.y);
-        TextureRegion frame = null;
-        boolean flipX = false;
-        switch (facingDirection) {
-            case NORTH:
-                frame = frames[0];
-                break;
-            case NORTHEAST:
-                frame = frames[1];
-                break;
-            case EAST:
-                frame = frames[2];
-                break;
-            case SOUTHEAST:
-                frame = frames[3];
-                break;
-            case SOUTH:
-                frame = frames[4];
-                break;
-            case SOUTHWEST:
-                frame = frames[3];
-                flipX = true;
-                break;
-            case WEST:
-                frame = frames[2];
-                flipX = true;
-                break;
-            case NORTHWEST:
-                frame = frames[1];
-                flipX = true;
-                break;
-        }
-        Texture texture = frames[0].getTexture();
-        batch.draw(texture, positionScreen.x, positionScreen.y, frame.getRegionWidth() / 2, 0,
-                texture.getWidth() / IDLE_COLS,
-                texture.getHeight() / IDLE_ROWS, 4, 4, 0,
-                frame.getRegionX(), frame.getRegionY(), frame.getRegionWidth(),
-                frame.getRegionHeight(), flipX, false);
-    }
-
 }
