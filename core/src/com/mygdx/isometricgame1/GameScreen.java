@@ -215,25 +215,31 @@ public class GameScreen implements Screen {
         TextureRegion currentFrame = null;
         int animationCols = 0;
         int animationRows = 0;
+        float animationOffsetX = 0f;
+        float animationOffsetY = 0f;
 
         switch (state) {
             case IDLE:
                 currentFrame = antIdleAnimations.get(facingDirection).getKeyFrame(elapsedTime);
                 animationCols = IDLE_FRAME_COLS;
                 animationRows = IDLE_FRAME_ROWS;
+                animationOffsetX = 0.6f;
+                animationOffsetY = 0.0f;
                 break;
             case WALKING:
                 currentFrame = antWalkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
                 animationCols = WALKING_FRAME_COLS;
                 animationRows = WALKING_FRAME_ROWS;
+                animationOffsetX = 0.6f;
+                animationOffsetY = -0.05f;
                 break;
         }
 
-        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * 0.6f,
-                positionScreen.y,
+        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * animationOffsetX,
+                positionScreen.y + currentFrame.getRegionHeight() * animationOffsetY,
                 0, 0,
-                currentFrame.getTexture().getWidth() / animationCols,
-                currentFrame.getTexture().getHeight() / animationRows, 1, 1, 0,
+                currentFrame.getRegionWidth(),
+                currentFrame.getRegionHeight(), 1, 1, 0,
                 currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
                 currentFrame.getRegionHeight(), flipX, false);
     }
