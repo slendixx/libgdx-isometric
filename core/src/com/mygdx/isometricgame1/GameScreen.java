@@ -44,14 +44,14 @@ public class GameScreen implements Screen {
     private TextureAtlas antIdleAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
     private HashMap<Integer, Animation<TextureRegion>> antWalkingAnimations;
     private HashMap<Integer, Animation<TextureRegion>> antIdleAnimations;
-    private final float WALKING_FRAME_DURATION = 1 / 30f;
-    private final float IDLE_FRAME_DURATION = 1 / 15f;
+    private final float WALKING_FRAME_DURATION = 1 / 26f;
+    private final float IDLE_FRAME_DURATION = 1 / 10f;
     private float elapsedTime = 0;
     private Vector2 antPosition;
     private Vector2 antDirectionVector;
     private int antFacingDirection; // 0-15
     private UnitState AntState = UnitState.IDLE;
-    private Vector2 antTargetPostion;
+    private Vector2 antTargetPosition;
     private final float ANT_SPEED = 1.4f;
     private final int WALKING_FRAME_COLS = 7;
     private final int WALKING_FRAME_ROWS = 25;
@@ -95,7 +95,7 @@ public class GameScreen implements Screen {
 
         antPosition = new Vector2(15, 10);
         antDirectionVector = new Vector2();
-        antTargetPostion = new Vector2();
+        antTargetPosition = new Vector2();
         antFacingDirection = 0;
     }
 
@@ -116,7 +116,8 @@ public class GameScreen implements Screen {
             antPosition.x += ANT_SPEED * antDirectionVector.x * delta;
             antPosition.y += ANT_SPEED * antDirectionVector.y * delta;
 
-            float distanceToTarget = antPosition.dst(antTargetPostion);
+            // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
+            float distanceToTarget = antPosition.dst(antTargetPosition);
 
             if (distanceToTarget <= ARRIVED_TO_TARGET_POSITION_DISTANCE) {
                 /*
@@ -157,9 +158,11 @@ public class GameScreen implements Screen {
         }
 
         if (Gdx.input.justTouched()) {
-            antTargetPostion = clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera);
+            antTargetPosition = clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera);
+            // Gdx.app.log("target position", "x:" + antTargetPosition.x + " y:" +
+            // antTargetPosition.y);
             AntState = UnitState.WALKING;
-            antDirectionVector.set(antTargetPostion);
+            antDirectionVector.set(antTargetPosition);
             antDirectionVector.sub(antPosition).nor();
             float angle = MathUtils.radiansToDegrees * MathUtils.atan2(antDirectionVector.y, antDirectionVector.x);
 
@@ -226,8 +229,9 @@ public class GameScreen implements Screen {
                 break;
         }
 
-        batch.draw(currentFrame.getTexture(), positionScreen.x, positionScreen.y,
-                currentFrame.getRegionWidth() / 2, 0,
+        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * 0.6f,
+                positionScreen.y,
+                0, 0,
                 currentFrame.getTexture().getWidth() / animationCols,
                 currentFrame.getTexture().getHeight() / animationRows, 1, 1, 0,
                 currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
