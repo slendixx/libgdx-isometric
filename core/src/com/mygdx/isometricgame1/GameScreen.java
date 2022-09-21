@@ -41,17 +41,22 @@ public class GameScreen implements Screen {
     private final int FACING_DIRECTION_AMOUNT = 16;
     private final int SPRITE_DIRECTION_AMOUNT = 9;
     private TextureAtlas antWalkingAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-walking.atlas"));
+    private TextureAtlas antIdleAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
     private HashMap<Integer, Animation<TextureRegion>> antWalkingAnimations;
-    private final float FRAME_DURATION = 1 / 30f;
+    private HashMap<Integer, Animation<TextureRegion>> antIdleAnimations;
+    private final float WALKING_FRAME_DURATION = 1 / 30f;
+    private final float IDLE_FRAME_DURATION = 1 / 15f;
     private float elapsedTime = 0;
     private Vector2 antPosition;
     private Vector2 antDirectionVector;
     private int antFacingDirection; // 0-15
-    private UnitState AntState = UnitState.WALKING;
+    private UnitState AntState = UnitState.IDLE;
     private Vector2 antTargetPostion;
     private final float ANT_SPEED = 1.4f;
-    private final int WALKING_COLS = 7;
-    private final int WALKING_ROWS = 25;
+    private final int WALKING_FRAME_COLS = 7;
+    private final int WALKING_FRAME_ROWS = 25;
+    private final int IDLE_FRAME_COLS = 13;
+    private final int IDLE_FRAME_ROWS = 7;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -67,7 +72,7 @@ public class GameScreen implements Screen {
         antWalkingAnimations = new HashMap<Integer, Animation<TextureRegion>>();
         // init directions 0-8
         for (int i = 0; i < SPRITE_DIRECTION_AMOUNT; i++) {
-            antWalkingAnimations.put(i, new Animation<TextureRegion>(FRAME_DURATION,
+            antWalkingAnimations.put(i, new Animation<TextureRegion>(WALKING_FRAME_DURATION,
                     antWalkingAtlas.findRegions("walking-" + i), PlayMode.LOOP));
         }
         // init directions with flipped sprites for directions 9-15
@@ -76,9 +81,16 @@ public class GameScreen implements Screen {
         for (int i = 7; i > 0; i--) {
             antWalkingAnimations.put(animationIndex++, antWalkingAnimations.get(i));
         }
-        // check that animations where loaded in correct order
-        for (int i = 0; i < FACING_DIRECTION_AMOUNT; i++) {
-            System.out.println(antWalkingAnimations.get(i));
+
+        antIdleAnimations = new HashMap<Integer, Animation<TextureRegion>>();
+        for (int i = 0; i < SPRITE_DIRECTION_AMOUNT; i++) {
+            antIdleAnimations.put(i, new Animation<TextureRegion>(IDLE_FRAME_DURATION,
+                    antIdleAtlas.findRegions("idle-" + i), PlayMode.LOOP));
+        } // init directions with flipped sprites for directions 9-15
+        animationIndex = 9;
+        // we need to store again references to sprites for directions 1-7
+        for (int i = 7; i > 0; i--) {
+            antIdleAnimations.put(animationIndex++, antIdleAnimations.get(i));
         }
 
         antPosition = new Vector2(15, 10);
@@ -120,7 +132,7 @@ public class GameScreen implements Screen {
         mapRenderer.render(game.spriteBatch);
         // renderIdleWorker(game.spriteBatch, workerFacingDirection, idleFrames,
         // workerPosition);
-        renderAnt(game.spriteBatch, antPosition, antFacingDirection, antWalkingAnimations, elapsedTime);
+        renderAnt(game.spriteBatch, antPosition, antFacingDirection, AntState, antWalkingAnimations, elapsedTime);
         game.spriteBatch.end();
 
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
@@ -187,7 +199,7 @@ public class GameScreen implements Screen {
 
     }
 
-    private void renderAnt(SpriteBatch batch, Vector2 position, int facingDirection,
+    private void renderAnt(SpriteBatch batch, Vector2 position, int facingDirection, UnitState state,
             HashMap<Integer, Animation<TextureRegion>> antWalkingAnimations, float elapsedTime) {
 
         boolean flipX = false;
@@ -196,11 +208,28 @@ public class GameScreen implements Screen {
         }
         // TODO overload transform method to receive a Vector2
         positionScreen = transformation.transform(position.x, position.y);
-        TextureRegion currentFrame = antWalkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+
+        TextureRegion currentFrame = null;
+        int animationCols = 0;
+        int animationRows = 0;
+
+        switch (state) {
+            case IDLE:
+                currentFrame = antIdleAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+                animationCols = IDLE_FRAME_COLS;
+                animationRows = IDLE_FRAME_ROWS;
+                break;
+            case WALKING:
+                currentFrame = antWalkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+                animationCols = WALKING_FRAME_COLS;
+                animationRows = WALKING_FRAME_ROWS;
+                break;
+        }
+
         batch.draw(currentFrame.getTexture(), positionScreen.x, positionScreen.y,
                 currentFrame.getRegionWidth() / 2, 0,
-                currentFrame.getTexture().getWidth() / WALKING_COLS,
-                currentFrame.getTexture().getHeight() / WALKING_ROWS, 1, 1, 0,
+                currentFrame.getTexture().getWidth() / animationCols,
+                currentFrame.getTexture().getHeight() / animationRows, 1, 1, 0,
                 currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
                 currentFrame.getRegionHeight(), flipX, false);
     }
