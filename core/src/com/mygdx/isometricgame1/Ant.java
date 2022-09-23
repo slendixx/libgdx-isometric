@@ -1,0 +1,182 @@
+package com.mygdx.isometricgame1;
+
+import java.util.HashMap;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+
+public class Ant {
+
+    private static final int FACING_DIRECTION_AMOUNT = 16;
+    private static final int SPRITE_DIRECTION_AMOUNT = 9;
+    private static TextureAtlas walkingAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-walking.atlas"));
+    private static TextureAtlas idleAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
+    private static HashMap<Integer, Animation<TextureRegion>> walkingAnimations;
+    private static HashMap<Integer, Animation<TextureRegion>> idleAnimations;
+    private static final float WALKING_FRAME_DURATION = 1 / 26f;
+    private static final float IDLE_FRAME_DURATION = 1 / 10f;
+    private static float elapsedTime = 0;
+    private static final float SPEED = 1.4f;
+    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.1f;
+
+    private Vector2 positionScreen;
+    private TiledIsoTransformation transformation;
+
+    private SpriteBatch batch;
+    private Vector2 position;
+    private Vector2 directionVector;
+    private int facingDirection; // 0-15
+    private UnitState state = UnitState.IDLE;
+    private Vector2 targetPosition;
+
+    public Ant(SpriteBatch batch, TiledIsoTransformation transformation) {
+
+        this.batch = batch;
+        this.transformation = transformation;
+
+        // init animations
+        walkingAnimations = initWalkingAnimations();
+        idleAnimations = initIdleAnimations();
+
+        // init private properties
+        position = new Vector2(15, 10);
+        directionVector = new Vector2();
+        targetPosition = new Vector2();
+        facingDirection = 0;
+    }
+
+    private HashMap<Integer, Animation<TextureRegion>> initWalkingAnimations() {
+        walkingAnimations = new HashMap<Integer, Animation<TextureRegion>>();
+        int animationIndex = 9;
+        // init animations for directions 0-8
+        for (int i = 0; i < SPRITE_DIRECTION_AMOUNT; i++) {
+            walkingAnimations.put(i, new Animation<TextureRegion>(WALKING_FRAME_DURATION,
+                    walkingAtlas.findRegions("walking-" + i), PlayMode.LOOP));
+        } // init animations with flipped sprites for directions 9-15
+          // we need to store again references to sprites for directions 1-7
+        for (int i = 7; i > 0; i--) {
+            walkingAnimations.put(animationIndex++, walkingAnimations.get(i));
+        }
+
+        return walkingAnimations;
+    }
+
+    private HashMap<Integer, Animation<TextureRegion>> initIdleAnimations() {
+        idleAnimations = new HashMap<Integer, Animation<TextureRegion>>();
+        int animationIndex = 9;
+        // init animations for directions 0-8
+        for (int i = 0; i < SPRITE_DIRECTION_AMOUNT; i++) {
+            idleAnimations.put(i, new Animation<TextureRegion>(IDLE_FRAME_DURATION,
+                    idleAtlas.findRegions("idle-" + i), PlayMode.LOOP));
+        } // init directions with flipped sprites for directions 9-15
+          // we need to store again references to sprites for directions 1-7
+        for (int i = 7; i > 0; i--) {
+            idleAnimations.put(animationIndex++, idleAnimations.get(i));
+        }
+        return idleAnimations;
+    }
+
+    public void update(float delta) {
+        elapsedTime += delta;
+        if (state == UnitState.WALKING) {
+            position.x += SPEED * directionVector.x * delta;
+            position.y += SPEED * directionVector.y * delta;
+
+            // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
+            float distanceToTarget = position.dst(targetPosition);
+
+            if (distanceToTarget <= ARRIVED_TO_TARGET_POSITION_DISTANCE) {
+                /*
+                 * TODO this check will probably have to be adjusted to take the unit size into
+                 * consideration when I start checkin for collisions
+                 */
+                // TODO add idle animation
+                state = UnitState.IDLE;
+            }
+        }
+    }
+
+    public void updateFacingDirection(Vector2 targetPosition) {
+        targetPosition = targetPosition;
+        // Gdx.app.log("target position", "x:" + antTargetPosition.x + " y:" +
+        // antTargetPosition.y);
+        state = UnitState.WALKING;
+        directionVector.set(targetPosition);
+        directionVector.sub(position).nor();
+        float angle = MathUtils.radiansToDegrees * MathUtils.atan2(directionVector.y, directionVector.x);
+
+        if (angle >= 146.25 && angle < 168.75)
+            facingDirection = 15;
+        else if (angle >= 168.75 && angle < 180.0 || angle >= -180 && angle < -168.75)
+            facingDirection = 14;
+        else if (angle >= -168.75 && angle < -146.25)
+            facingDirection = 13;
+        else if (angle >= -146.25 && angle < -123.75)
+            facingDirection = 12;
+        else if (angle >= -123.75 && angle < -101.25)
+            facingDirection = 11;
+        else if (angle >= -101.25 && angle < -78.75)
+            facingDirection = 10;
+        else if (angle >= -78.75 && angle < -56.25)
+            facingDirection = 9;
+        else if (angle >= -56.25 && angle < -33.75)
+            facingDirection = 8;
+        else if (angle >= -33.75 && angle < -11.25)
+            facingDirection = 7;
+        else if (angle >= -11.25 && angle < 11.25)
+            facingDirection = 6;
+        else if (angle >= -11.25 && angle < 33.75)
+            facingDirection = 5;
+        else if (angle >= 33.75 && angle < 56.25)
+            facingDirection = 4;
+        else if (angle >= 56.25 && angle < 78.75)
+            facingDirection = 3;
+        else if (angle >= 78.75 && angle < 101.25)
+            facingDirection = 2;
+        else if (angle >= 101.25 && angle < 123.75)
+            facingDirection = 1;
+        else if (angle >= 123.75 && angle < 146.25)
+            facingDirection = 0;
+    }
+
+    public void draw(float delta) {
+
+        boolean flipX = false;
+        if (facingDirection >= 9 && facingDirection < FACING_DIRECTION_AMOUNT) {
+            flipX = true;
+        }
+        // TODO overload transform method to receive a Vector2
+        positionScreen = transformation.transform(position.x, position.y);
+
+        TextureRegion currentFrame = null;
+        float animationOffsetX = 0f;
+        float animationOffsetY = 0f;
+
+        switch (state) {
+            case IDLE:
+                currentFrame = idleAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+                animationOffsetX = 0.6f;
+                animationOffsetY = 0.0f;
+                break;
+            case WALKING:
+                currentFrame = walkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
+                animationOffsetX = 0.6f;
+                animationOffsetY = -0.05f;
+                break;
+        }
+
+        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * animationOffsetX,
+                positionScreen.y + currentFrame.getRegionHeight() * animationOffsetY,
+                0, 0,
+                currentFrame.getRegionWidth(),
+                currentFrame.getRegionHeight(), 1, 1, 0,
+                currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
+                currentFrame.getRegionHeight(), flipX, false);
+    }
+}
