@@ -103,7 +103,7 @@ public class Ant {
     }
 
     public void updateFacingDirection(Vector2 targetPosition) {
-        targetPosition = targetPosition;
+        this.targetPosition = targetPosition;
         // Gdx.app.log("target position", "x:" + antTargetPosition.x + " y:" +
         // antTargetPosition.y);
         state = UnitState.WALKING;
