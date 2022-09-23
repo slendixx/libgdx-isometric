@@ -26,6 +26,7 @@ public class Ant {
     private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.1f;
 
     private Vector2 positionScreen;
+    // TODO remove duplication of this property
     private TiledIsoTransformation transformation;
 
     private SpriteBatch batch;
@@ -145,13 +146,15 @@ public class Ant {
             facingDirection = 0;
     }
 
-    public void draw(float delta) {
+    public void draw() {
 
         boolean flipX = false;
         if (facingDirection >= 9 && facingDirection < FACING_DIRECTION_AMOUNT) {
             flipX = true;
         }
         // TODO overload transform method to receive a Vector2
+        // TODO remove positionScreen from this class. Perhaps receive positionScreen as
+        // argument
         positionScreen = transformation.transform(position.x, position.y);
 
         TextureRegion currentFrame = null;

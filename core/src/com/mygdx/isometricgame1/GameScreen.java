@@ -21,6 +21,7 @@ public class GameScreen implements Screen {
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
     private Ant ant;
+    private Rock rock;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -32,6 +33,8 @@ public class GameScreen implements Screen {
         mapRenderer = new MapRenderer(map);
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         ant = new Ant(this.game.spriteBatch, transformation);
+        rock = new Rock(this.game.spriteBatch, transformation);
+        rock.setPosition(0, 0);
     }
 
     @Override
@@ -48,7 +51,8 @@ public class GameScreen implements Screen {
         ant.update(delta);
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        ant.draw(delta);
+        rock.draw();
+        ant.draw();
         game.spriteBatch.end();
 
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
