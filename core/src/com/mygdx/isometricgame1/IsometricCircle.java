@@ -12,12 +12,14 @@ public class IsometricCircle {
     // TODO remove transformation duplication between classes. perhaps make it
     // static method
     TiledIsoTransformation transformation;
+    private final float offsetX = 0.5f;
 
     public IsometricCircle(float circleRadius) {
         this.position = new Vector2(0, 0);
         width = 2 * (float) Math.cos(MathUtils.degreesToRadians * 45f) * circleRadius;
         height = width / 2;
         transformation = new TiledIsoTransformation(128, 64);
+
     }
 
     public void setPosition(float x, float y) {
@@ -29,11 +31,9 @@ public class IsometricCircle {
     }
 
     public void draw(ShapeRenderer renderer) {
-        float offsetX = 0.5f;
-        float offsetY = 0f;
         Vector2 positionScreen = transformation.transform(position.x, position.y);
         renderer.setColor(Color.WHITE);
-        renderer.ellipse(positionScreen.x - (width * offsetX), positionScreen.y + (height * offsetY), width, height);
+        renderer.ellipse(positionScreen.x - (width * offsetX), positionScreen.y , width, height);
     }
 
 }

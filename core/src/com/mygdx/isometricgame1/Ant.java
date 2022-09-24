@@ -15,10 +15,14 @@ public class Ant {
 
     private static final int FACING_DIRECTION_AMOUNT = 16;
     private static final int SPRITE_DIRECTION_AMOUNT = 9;
-    private static TextureAtlas walkingAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-walking.atlas"));
-    private static TextureAtlas idleAtlas = new TextureAtlas(Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
+    private static TextureAtlas walkingAtlas = new TextureAtlas(
+            Gdx.files.internal("sprites/ant/ant-walking.atlas"));
+    private static TextureAtlas idleAtlas = new TextureAtlas(
+            Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
     private static HashMap<Integer, Animation<TextureRegion>> walkingAnimations;
     private static HashMap<Integer, Animation<TextureRegion>> idleAnimations;
+    private final float ANIMATION_OFFSET_Y = 0.1f;
+    private final float ANIMATION_OFFSET_X = 0.5f;
     private static final float WALKING_FRAME_DURATION = 1 / 26f;
     private static final float IDLE_FRAME_DURATION = 1 / 10f;
     private static float elapsedTime = 0;
@@ -35,8 +39,9 @@ public class Ant {
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
-    private final float RADIUS = 50;
-    private IsometricCircle circle;
+    private final float RADIUS = 60;
+    private IsometricCircle circle; // for collision detection. Visually, the center of the circle represents the
+                                    // ant's position in the world visually.
 
     public Ant(SpriteBatch batch, TiledIsoTransformation transformation) {
 
@@ -167,24 +172,18 @@ public class Ant {
         positionScreen = transformation.transform(position.x, position.y);
 
         TextureRegion currentFrame = null;
-        float animationOffsetX = 0f;
-        float animationOffsetY = 0f;
 
         switch (state) {
             case IDLE:
                 currentFrame = idleAnimations.get(facingDirection).getKeyFrame(elapsedTime);
-                animationOffsetX = 0.6f;
-                animationOffsetY = 0.0f;
                 break;
             case WALKING:
                 currentFrame = walkingAnimations.get(facingDirection).getKeyFrame(elapsedTime);
-                animationOffsetX = 0.6f;
-                animationOffsetY = -0.05f;
                 break;
         }
 
-        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * animationOffsetX,
-                positionScreen.y + currentFrame.getRegionHeight() * animationOffsetY,
+        batch.draw(currentFrame.getTexture(), positionScreen.x - currentFrame.getRegionWidth() * ANIMATION_OFFSET_X,
+                positionScreen.y - currentFrame.getRegionHeight() * ANIMATION_OFFSET_Y,
                 0, 0,
                 currentFrame.getRegionWidth(),
                 currentFrame.getRegionHeight(), 1, 1, 0,
