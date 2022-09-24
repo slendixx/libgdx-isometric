@@ -57,9 +57,11 @@ public class GameScreen implements Screen {
         mapRenderer.render(game.spriteBatch);
         game.spriteBatch.end();
         // render ant circle
+        // TODO research way to render shaped in a SpriteBatch
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeType.Line);
         ant.getCircle().draw(shapeRenderer);
+        rock.getCircle().draw(shapeRenderer);
         shapeRenderer.end();
         game.spriteBatch.begin();
         rock.draw();

@@ -39,7 +39,7 @@ public class Ant {
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
-    private final float RADIUS = 60;
+    private final float RADIUS = 50;
     private IsometricCircle circle; // for collision detection. Visually, the center of the circle represents the
                                     // ant's position in the world visually.
 
