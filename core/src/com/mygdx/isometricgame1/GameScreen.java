@@ -5,6 +5,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -18,6 +20,7 @@ public class GameScreen implements Screen {
     private final int VIEWPORT_HEIGHT = 900;
     private TiledMap map;
     private MapRenderer mapRenderer;
+    private ShapeRenderer shapeRenderer;
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
     private Ant ant;
@@ -31,10 +34,11 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false);
         map = new TmxMapLoader().load("maps/map-1.tmx");
         mapRenderer = new MapRenderer(map);
+        shapeRenderer = new ShapeRenderer();
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         ant = new Ant(this.game.spriteBatch, transformation);
         rock = new Rock(this.game.spriteBatch, transformation);
-        rock.setPosition(0, 0);
+        rock.setPosition(10, 10);
     }
 
     @Override
@@ -51,6 +55,13 @@ public class GameScreen implements Screen {
         ant.update(delta);
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
+        game.spriteBatch.end();
+        // render ant circle
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeType.Line);
+        ant.getCircle().draw(shapeRenderer);
+        shapeRenderer.end();
+        game.spriteBatch.begin();
         rock.draw();
         ant.draw();
         game.spriteBatch.end();

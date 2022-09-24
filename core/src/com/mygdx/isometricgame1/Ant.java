@@ -35,6 +35,8 @@ public class Ant {
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
+    private final float RADIUS = 50;
+    private IsometricCircle circle;
 
     public Ant(SpriteBatch batch, TiledIsoTransformation transformation) {
 
@@ -50,6 +52,8 @@ public class Ant {
         directionVector = new Vector2();
         targetPosition = new Vector2();
         facingDirection = 0;
+
+        circle = new IsometricCircle(RADIUS);
     }
 
     private HashMap<Integer, Animation<TextureRegion>> initWalkingAnimations() {
@@ -101,6 +105,7 @@ public class Ant {
                 state = UnitState.IDLE;
             }
         }
+        circle.setPosition(position);
     }
 
     public void updateFacingDirection(Vector2 targetPosition) {
@@ -144,6 +149,10 @@ public class Ant {
             facingDirection = 1;
         else if (angle >= 123.75 && angle < 146.25)
             facingDirection = 0;
+    }
+
+    public IsometricCircle getCircle() {
+        return circle;
     }
 
     public void draw() {

@@ -50,6 +50,7 @@ public class TiledIsoTransformation {
         transformY = new Vector2();
     }
 
+    // TODO receive vector 2 as argument
     public Vector2 transform(float isoX, float isoY) {
         // scalar multiplication of x * uniti & y * unitj
         transformX.set(uniti).scl(isoX);
