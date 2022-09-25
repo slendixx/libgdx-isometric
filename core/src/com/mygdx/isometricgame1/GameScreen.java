@@ -5,11 +5,17 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.utils.ScreenUtils;
+
+import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class GameScreen implements Screen {
 
@@ -25,6 +31,13 @@ public class GameScreen implements Screen {
     private TiledIsoTransformation transformation;
     private Ant ant;
     private Rock rock;
+    private IsometricSquare square;
+
+    // shapeDrawer
+    Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
+    Texture shapeDrawerDrawTexture;
+    TextureRegion shapeDrawerTextureRegion;
+    ShapeDrawer shapeDrawer;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -39,6 +52,15 @@ public class GameScreen implements Screen {
         ant = new Ant(this.game.spriteBatch, transformation);
         rock = new Rock(this.game.spriteBatch, transformation);
         rock.setPosition(10, 10);
+        square = new IsometricSquare(0, 0);
+
+        // init shape drawer
+        pixmap.setColor(Color.WHITE);
+        pixmap.drawPixel(0, 0);
+        shapeDrawerDrawTexture = new Texture(pixmap);
+        pixmap.dispose();
+        shapeDrawerTextureRegion = new TextureRegion(shapeDrawerDrawTexture, 0, 0, 1, 1);
+        shapeDrawer = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureRegion);
     }
 
     @Override
@@ -64,6 +86,7 @@ public class GameScreen implements Screen {
         rock.getCircle().draw(shapeRenderer);
         shapeRenderer.end();
         game.spriteBatch.begin();
+        square.draw(shapeDrawer);
         rock.draw();
         ant.draw();
         game.spriteBatch.end();
@@ -116,6 +139,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
+        // TODO dispose of EVERYTHING
+        ant.dispose();
+        shapeDrawerDrawTexture.dispose();
     }
 
 }
