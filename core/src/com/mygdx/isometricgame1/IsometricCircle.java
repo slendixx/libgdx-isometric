@@ -13,6 +13,7 @@ public class IsometricCircle {
     // static method
     TiledIsoTransformation transformation;
     private final float offsetX = 0.5f;
+    private final float offsetY = 0.5f;
 
     public IsometricCircle(float circleRadius) {
         this.position = new Vector2(0, 0);
@@ -33,7 +34,8 @@ public class IsometricCircle {
     public void draw(ShapeRenderer renderer) {
         Vector2 positionScreen = transformation.transform(position.x, position.y);
         renderer.setColor(Color.WHITE);
-        renderer.ellipse(positionScreen.x - (width * offsetX), positionScreen.y , width, height);
+        // offset x & y coordinates to put the center of the circle in the iso position
+        renderer.ellipse(positionScreen.x - (width * offsetX), positionScreen.y - (height * offsetY), width, height);
     }
 
 }

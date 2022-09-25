@@ -41,7 +41,8 @@ public class MapRenderer {
                     // Perhaps could cache all textures
                     textureBuffer = cell.getTile().getTextureRegion();
                     transformedPos = transformation.transform(x, y);
-                    batch.draw(textureBuffer, transformedPos.x, transformedPos.y);
+                    // subtract half tile height to draw from leftmost corner of the sprite
+                    batch.draw(textureBuffer, transformedPos.x, transformedPos.y - TILE_HEIGHT / 2);
                 }
             }
         }
