@@ -26,7 +26,6 @@ public class GameScreen implements Screen {
     private final int VIEWPORT_HEIGHT = 900;
     private TiledMap map;
     private MapRenderer mapRenderer;
-    private ShapeRenderer shapeRenderer;
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
     private Ant ant;
@@ -48,7 +47,6 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false);
         map = new TmxMapLoader().load("maps/map-1.tmx");
         mapRenderer = new MapRenderer(map);
-        shapeRenderer = new ShapeRenderer();
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         ant = new Ant(this.game.spriteBatch, transformation);
         rock1 = new Rock(this.game.spriteBatch, transformation, 2, 2);
@@ -78,20 +76,13 @@ public class GameScreen implements Screen {
         ant.update(delta);
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        game.spriteBatch.end();
-        // render ant circle
-        // TODO research way to render shaped in a SpriteBatch
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeType.Line);
-        ant.getCircle().draw(shapeRenderer);
-        shapeRenderer.end();
-        game.spriteBatch.begin();
         rock1.getSquare().draw(shapeDrawer);
         rock1.draw();
         rock2.getSquare().draw(shapeDrawer);
         rock2.draw();
         rock3.getSquare().draw(shapeDrawer);
         rock3.draw();
+        ant.getCircle().draw(shapeDrawer);
         ant.draw();
         game.spriteBatch.end();
 
