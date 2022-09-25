@@ -21,13 +21,13 @@ public class Ant {
             Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
     private static HashMap<Integer, Animation<TextureRegion>> walkingAnimations;
     private static HashMap<Integer, Animation<TextureRegion>> idleAnimations;
-    private final float ANIMATION_OFFSET_Y = 0.1f;
+    private final float ANIMATION_OFFSET_Y = 0.3f;
     private final float ANIMATION_OFFSET_X = 0.5f;
     private static final float WALKING_FRAME_DURATION = 1 / 26f;
     private static final float IDLE_FRAME_DURATION = 1 / 10f;
     private static float elapsedTime = 0;
     private static final float SPEED = 1.4f;
-    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.1f;
+    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.05f;
 
     private Vector2 positionScreen;
     // TODO remove duplication of this property
@@ -40,8 +40,11 @@ public class Ant {
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
     private final float RADIUS = 50;
-    private IsometricCircle circle; // for collision detection. Visually, the center of the circle represents the
-                                    // ant's position in the world visually.
+    /*
+     * for collision detection. Visually, the center of the circle represents the
+     * ant's position in the world visually.
+     */
+    private IsometricCircle circle;
 
     public Ant(SpriteBatch batch, TiledIsoTransformation transformation) {
 
@@ -53,12 +56,13 @@ public class Ant {
         idleAnimations = initIdleAnimations();
 
         // init private properties
-        position = new Vector2(15, 10);
+        position = new Vector2(0, 0);
         directionVector = new Vector2();
         targetPosition = new Vector2();
         facingDirection = 0;
 
         circle = new IsometricCircle(RADIUS);
+
     }
 
     private HashMap<Integer, Animation<TextureRegion>> initWalkingAnimations() {
@@ -108,6 +112,7 @@ public class Ant {
                  */
                 // TODO add idle animation
                 state = UnitState.IDLE;
+                position.set(targetPosition);
             }
         }
         circle.setPosition(position);
@@ -189,5 +194,9 @@ public class Ant {
                 currentFrame.getRegionHeight(), 1, 1, 0,
                 currentFrame.getRegionX(), currentFrame.getRegionY(), currentFrame.getRegionWidth(),
                 currentFrame.getRegionHeight(), flipX, false);
+    }
+
+    public void dispose() {
+        // TODO dispose of EVERYTHING
     }
 }
