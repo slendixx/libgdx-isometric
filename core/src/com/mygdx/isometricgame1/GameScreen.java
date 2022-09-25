@@ -30,8 +30,9 @@ public class GameScreen implements Screen {
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
     private Ant ant;
-    private Rock rock;
-    private IsometricSquare square;
+    private Rock rock1;
+    private Rock rock2;
+    private Rock rock3;
 
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
@@ -50,9 +51,9 @@ public class GameScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         ant = new Ant(this.game.spriteBatch, transformation);
-        rock = new Rock(this.game.spriteBatch, transformation);
-        rock.setPosition(10, 10);
-        square = new IsometricSquare(0, 0);
+        rock1 = new Rock(this.game.spriteBatch, transformation, 2, 2);
+        rock2 = new Rock(this.game.spriteBatch, transformation, 4, 5);
+        rock3 = new Rock(this.game.spriteBatch, transformation, 3, 7);
 
         // init shape drawer
         pixmap.setColor(Color.WHITE);
@@ -83,11 +84,14 @@ public class GameScreen implements Screen {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeType.Line);
         ant.getCircle().draw(shapeRenderer);
-        rock.getCircle().draw(shapeRenderer);
         shapeRenderer.end();
         game.spriteBatch.begin();
-        square.draw(shapeDrawer);
-        rock.draw();
+        rock1.getSquare().draw(shapeDrawer);
+        rock1.draw();
+        rock2.getSquare().draw(shapeDrawer);
+        rock2.draw();
+        rock3.getSquare().draw(shapeDrawer);
+        rock3.draw();
         ant.draw();
         game.spriteBatch.end();
 
