@@ -53,10 +53,9 @@ public class GameScreen implements Screen {
         rocks = new ArrayList<Rock>();
         rocks.add(
                 new Rock(this.game.spriteBatch, transformation, 2, 2));
+
         rocks.add(
-                new Rock(this.game.spriteBatch, transformation, 3, 2));
-        rocks.add(
-                new Rock(this.game.spriteBatch, transformation, 4, 2));
+                new Rock(this.game.spriteBatch, transformation, 5, 4));
 
         // init shape drawer
         // TODO refactor this into initShapeDrawer
