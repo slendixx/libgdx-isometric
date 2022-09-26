@@ -1,13 +1,14 @@
 package com.mygdx.isometricgame1;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
@@ -39,7 +40,7 @@ public class Ant {
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
-    private final float RADIUS = 50;
+    private final float RADIUS = 30;
     /*
      * for collision detection. Visually, the center of the circle represents the
      * ant's position in the world visually.
@@ -96,11 +97,15 @@ public class Ant {
         return idleAnimations;
     }
 
-    public void update(float delta) {
+    public void update(float delta, ArrayList<Rock> rocks) {
         elapsedTime += delta;
         if (state == UnitState.WALKING) {
             position.x += SPEED * directionVector.x * delta;
             position.y += SPEED * directionVector.y * delta;
+
+            for (Rock rock : rocks) {
+                collide(rock.getSquare());
+            }
 
             // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
             float distanceToTarget = position.dst(targetPosition);
@@ -112,7 +117,7 @@ public class Ant {
                  */
                 // TODO add idle animation
                 state = UnitState.IDLE;
-                position.set(targetPosition);
+                // position.set(targetPosition);
             }
         }
         circle.setPosition(position);
@@ -198,5 +203,64 @@ public class Ant {
 
     public void dispose() {
         // TODO dispose of EVERYTHING
+    }
+
+    public boolean intersects(IsometricSquare square) {
+        /*
+         * source
+         * https://stackoverflow.com/questions/401847/circle-rectangle-collision-
+         * detection-intersection
+         */
+        Vector2 circlePosition = circle.getPosition();
+        Vector2 squarePosition = square.getPosition();
+
+        // TODO refactor global constant 128 "TILE WIDTH"
+        float distanceToSquareX = 128 * Math.abs(circlePosition.x - squarePosition.x);
+        float distanceToSquareY = 128 * Math.abs(circlePosition.y - squarePosition.y);
+
+        float semiSquareLength = 128 / 2;
+
+        if (distanceToSquareX > (semiSquareLength + RADIUS))
+            return false;
+        if (distanceToSquareY > (semiSquareLength + RADIUS))
+            return false;
+
+        if (distanceToSquareX <= (semiSquareLength))
+            return true;
+        if (distanceToSquareY <= (semiSquareLength))
+            return true;
+
+        double distanceToSquareCorner = Math.pow((distanceToSquareX - semiSquareLength), 2)
+                + Math.pow((distanceToSquareY - semiSquareLength), 2);
+
+        return distanceToSquareCorner <= Math.pow(RADIUS, 2);
+    }
+
+    public void collide(IsometricSquare square) {
+
+        Vector2 squarePosition = square.getPosition();
+        Gdx.app.log("square position", "" + squarePosition);
+        Vector2 circlePosition = this.circle.getPosition();
+
+        Vector2 nearestPoint = new Vector2(
+                (float) Math.max(squarePosition.x - 0.5, Math.min(squarePosition.x + 0.5, position.x)),
+                (float) Math.max(squarePosition.y - 0.5, Math.min(squarePosition.y + 0.5, position.y)));
+
+        Gdx.app.log("position", "" + position);
+        Gdx.app.log("nearestPoint", "" + nearestPoint);
+
+        float nearestY = 128 * (nearestPoint.y - circlePosition.y);
+        float nearestX = 128 * (nearestPoint.x - circlePosition.x);
+        Vector2 toNearest = new Vector2(nearestX, nearestY);
+        double distanceToNearestPoint = Math.sqrt(nearestX * nearestX +
+                nearestY * nearestY);
+        Gdx.app.log("distance", "" + distanceToNearestPoint);
+
+        if (distanceToNearestPoint <= RADIUS + 1) {
+
+            position.sub(toNearest.nor().scl((float) (RADIUS -
+                    distanceToNearestPoint) / 128));
+
+        }
     }
 }

@@ -1,15 +1,14 @@
 package com.mygdx.isometricgame1;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class IsometricSquare {
 
     private float[] vertices;
+    private Vector2 position;
     private TiledIsoTransformation transformation;
 
     public IsometricSquare(int tileX, int tileY) {
@@ -21,6 +20,8 @@ public class IsometricSquare {
         float y2 = tileY + 1;
         float x3 = tileX + 1;
         float y3 = tileY;
+
+        position = new Vector2(tileX + 0.5f, tileY + 0.5f);
 
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         vertices = new float[8];
@@ -42,4 +43,9 @@ public class IsometricSquare {
     public void draw(ShapeDrawer shapeDrawer) {
         shapeDrawer.polygon(vertices);
     }
+
+    public Vector2 getPosition() {
+        return position;
+    }
+
 }

@@ -22,8 +22,8 @@ public class Utils {
         float mapX = -(mousePos.y / TILE_HEIGHT - mousePos.x / TILE_WIDTH) + SCREEN_OFFSET_CORRECTION_X;
         float mapY = (mousePos.x / TILE_WIDTH + mousePos.y / TILE_HEIGHT) + SCREEN_OFFSET_CORRECTION_Y;
 
-        Gdx.app.log("mapX", "" + mapX);
-        Gdx.app.log("mapY", "" + mapY);
+        // Gdx.app.log("mapX", "" + mapX);
+        // Gdx.app.log("mapY", "" + mapY);
 
         return new Vector2(mapX, mapY);
     }

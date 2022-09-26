@@ -1,5 +1,7 @@
 package com.mygdx.isometricgame1;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -9,8 +11,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -29,15 +29,16 @@ public class GameScreen implements Screen {
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
     private Ant ant;
-    private Rock rock1;
-    private Rock rock2;
-    private Rock rock3;
+    private ArrayList<Rock> rocks;
 
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
-    Texture shapeDrawerDrawTexture;
-    TextureRegion shapeDrawerTextureRegion;
-    ShapeDrawer shapeDrawer;
+    Texture shapeDrawerColorWhite;
+    Texture shapeDrawerColorRed;
+    TextureRegion shapeDrawerTextureWhite;
+    TextureRegion shapeDrawerTextureRed;
+    ShapeDrawer shapeDrawerWhite;
+    ShapeDrawer shapeDrawerRed;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -49,17 +50,27 @@ public class GameScreen implements Screen {
         mapRenderer = new MapRenderer(map);
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
         ant = new Ant(this.game.spriteBatch, transformation);
-        rock1 = new Rock(this.game.spriteBatch, transformation, 2, 2);
-        rock2 = new Rock(this.game.spriteBatch, transformation, 4, 5);
-        rock3 = new Rock(this.game.spriteBatch, transformation, 3, 7);
+        rocks = new ArrayList<Rock>();
+        rocks.add(
+                new Rock(this.game.spriteBatch, transformation, 2, 2));
+        rocks.add(
+                new Rock(this.game.spriteBatch, transformation, 3, 2));
+        rocks.add(
+                new Rock(this.game.spriteBatch, transformation, 4, 2));
 
         // init shape drawer
+        // TODO refactor this into initShapeDrawer
         pixmap.setColor(Color.WHITE);
         pixmap.drawPixel(0, 0);
-        shapeDrawerDrawTexture = new Texture(pixmap);
+        shapeDrawerColorWhite = new Texture(pixmap);
+        shapeDrawerTextureWhite = new TextureRegion(shapeDrawerColorWhite, 0, 0, 1, 1);
+        shapeDrawerWhite = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureWhite);
+        pixmap.setColor(Color.RED);
+        pixmap.drawPixel(0, 0);
+        shapeDrawerColorRed = new Texture(pixmap);
+        shapeDrawerTextureRed = new TextureRegion(shapeDrawerColorRed, 0, 0, 1, 1);
+        shapeDrawerRed = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureRed);
         pixmap.dispose();
-        shapeDrawerTextureRegion = new TextureRegion(shapeDrawerDrawTexture, 0, 0, 1, 1);
-        shapeDrawer = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureRegion);
     }
 
     @Override
@@ -73,16 +84,23 @@ public class GameScreen implements Screen {
         camera.update();
         game.spriteBatch.setProjectionMatrix(camera.combined);
 
-        ant.update(delta);
+        ant.update(delta, rocks);
+
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        rock1.getSquare().draw(shapeDrawer);
-        rock1.draw();
-        rock2.getSquare().draw(shapeDrawer);
-        rock2.draw();
-        rock3.getSquare().draw(shapeDrawer);
-        rock3.draw();
-        ant.getCircle().draw(shapeDrawer);
+        boolean collides = false;
+        for (Rock rock : rocks) {
+            rock.getSquare().draw(shapeDrawerWhite);
+            rock.draw();
+
+            if (ant.intersects(rock.getSquare()))
+                collides = true;
+        }
+        if (collides) {
+            ant.getCircle().draw(shapeDrawerRed);
+        } else {
+            ant.getCircle().draw(shapeDrawerWhite);
+        }
         ant.draw();
         game.spriteBatch.end();
 
@@ -136,7 +154,7 @@ public class GameScreen implements Screen {
     public void dispose() {
         // TODO dispose of EVERYTHING
         ant.dispose();
-        shapeDrawerDrawTexture.dispose();
+        shapeDrawerColorWhite.dispose();
     }
 
 }

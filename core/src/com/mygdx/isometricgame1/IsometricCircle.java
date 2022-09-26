@@ -33,6 +33,10 @@ public class IsometricCircle {
         this.position.set(position);
     }
 
+    public Vector2 getPosition() {
+        return position;
+    }
+
     public void draw(ShapeDrawer shapeDrawer) {
         Vector2 positionScreen = transformation.transform(position.x, position.y);
         // offset x & y coordinates to put the center of the circle in the iso position
