@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
-public class Rock {
+public class Rock extends Entity {
     /*
      * Rocks are obstacles. obstacles are placed on the center of their
      * tile and occupy the entire tile
@@ -17,17 +17,17 @@ public class Rock {
     private final float TEXTURE_OFFSET_Y = 0.4f;
     private final float TEXTURE_OFFSET_X = 0.5f;
     // TODO remove duplication of batch field
-    private SpriteBatch batch;
-    private Vector2 position;
     private Vector2 positionScreen;
     private TiledIsoTransformation transformation;
     private IsometricSquare square;
 
-    public Rock(SpriteBatch batch, TiledIsoTransformation transformation, int positionX, int positionY) {
-        textureRegion = new TextureRegion(new Texture(Gdx.files.internal("sprites/rock/rock-0.png")));
+    public Rock(GameScreen screen, TiledIsoTransformation transformation, int positionX,
+            int positionY) {
+        super(screen);
         position = new Vector2(0, 0);
-        this.position.set(positionX + OBSTACLE_POSITION_OFFSET_X, positionY + OBSTACLE_POSITION_OFFSET_Y);
-        this.batch = batch;
+        textureRegion = new TextureRegion(new Texture(Gdx.files.internal("sprites/rock/rock-0.png")));
+        setPosition(
+                positionX + OBSTACLE_POSITION_OFFSET_X, positionY + OBSTACLE_POSITION_OFFSET_Y);
         this.transformation = transformation;
         square = new IsometricSquare((int) Math.floor(position.x), (int) Math.floor(position.y));
     }
@@ -36,7 +36,7 @@ public class Rock {
         return square;
     }
 
-    public void draw() {
+    public void draw(SpriteBatch batch) {
 
         positionScreen = transformation.transform(position.x, position.y);
         batch.draw(textureRegion.getTexture(), positionScreen.x - textureRegion.getRegionWidth() * TEXTURE_OFFSET_X,

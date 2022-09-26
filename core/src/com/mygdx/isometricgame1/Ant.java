@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
-public class Ant {
+public class Ant extends Entity {
 
     private static final int FACING_DIRECTION_AMOUNT = 16;
     private static final int SPRITE_DIRECTION_AMOUNT = 9;
@@ -34,8 +34,6 @@ public class Ant {
     // TODO remove duplication of this property
     private TiledIsoTransformation transformation;
 
-    private SpriteBatch batch;
-    private Vector2 position;
     private Vector2 directionVector;
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
@@ -47,9 +45,9 @@ public class Ant {
      */
     private IsometricCircle circle;
 
-    public Ant(SpriteBatch batch, TiledIsoTransformation transformation) {
+    public Ant(GameScreen screen, TiledIsoTransformation transformation) {
+        super(screen);
 
-        this.batch = batch;
         this.transformation = transformation;
 
         // init animations
@@ -97,14 +95,20 @@ public class Ant {
         return idleAnimations;
     }
 
-    public void update(float delta, ArrayList<Rock> rocks) {
+    public void update(float delta, ArrayList<Entity> entities) {
+        super.update(delta);
         elapsedTime += delta;
         if (state == UnitState.WALKING) {
             position.x += SPEED * directionVector.x * delta;
             position.y += SPEED * directionVector.y * delta;
 
-            for (Rock rock : rocks) {
-                collide(rock.getSquare());
+            for (Entity entity : entities) {
+                /*
+                 * when checking for collision with ants, remember to check
+                 * if entity is a reference to the object itself
+                 */
+                if (entity instanceof Rock)
+                    collide(((Rock) entity).getSquare());
             }
 
             // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
@@ -170,7 +174,7 @@ public class Ant {
         return circle;
     }
 
-    public void draw() {
+    public void draw(SpriteBatch batch) {
 
         boolean flipX = false;
         if (facingDirection >= 9 && facingDirection < FACING_DIRECTION_AMOUNT) {
@@ -239,22 +243,17 @@ public class Ant {
     public void collide(IsometricSquare square) {
 
         Vector2 squarePosition = square.getPosition();
-        Gdx.app.log("square position", "" + squarePosition);
         Vector2 circlePosition = this.circle.getPosition();
 
         Vector2 nearestPoint = new Vector2(
                 (float) Math.max(squarePosition.x - 0.5, Math.min(squarePosition.x + 0.5, position.x)),
                 (float) Math.max(squarePosition.y - 0.5, Math.min(squarePosition.y + 0.5, position.y)));
 
-        Gdx.app.log("position", "" + position);
-        Gdx.app.log("nearestPoint", "" + nearestPoint);
-
         float nearestY = 128 * (nearestPoint.y - circlePosition.y);
         float nearestX = 128 * (nearestPoint.x - circlePosition.x);
         Vector2 toNearest = new Vector2(nearestX, nearestY);
         double distanceToNearestPoint = Math.sqrt(nearestX * nearestX +
                 nearestY * nearestY);
-        Gdx.app.log("distance", "" + distanceToNearestPoint);
 
         if (distanceToNearestPoint <= RADIUS + 1) {
 

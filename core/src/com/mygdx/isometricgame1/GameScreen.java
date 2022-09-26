@@ -1,6 +1,7 @@
 package com.mygdx.isometricgame1;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -24,12 +25,12 @@ public class GameScreen implements Screen {
     // TODO refactor these and other constants into game class to remove duplication
     private final int VIEWPORT_WIDTH = 1600;
     private final int VIEWPORT_HEIGHT = 900;
+    private final int MAP_WIDTH;
+    private final int MAP_HEIGHT;
     private TiledMap map;
     private MapRenderer mapRenderer;
     private final float cameraSpeed = 20;
     private TiledIsoTransformation transformation;
-    private Ant ant;
-    private ArrayList<Rock> rocks;
 
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
@@ -40,6 +41,10 @@ public class GameScreen implements Screen {
     ShapeDrawer shapeDrawerWhite;
     ShapeDrawer shapeDrawerRed;
 
+    // EntityManager
+    EntityManager entityManager;
+    Ant ant;
+
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
             IsometricGame1 game) {
@@ -47,15 +52,19 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.setToOrtho(false);
         map = new TmxMapLoader().load("maps/map-1.tmx");
+        /*
+         * MapProperties props = map.getProperties();
+         * Iterator<String> iter = props.getKeys();
+         * while (iter.hasNext()) {
+         * String key = iter.next();
+         * Gdx.app.log(key, "" + props.get(key));
+         * }
+         */
+        MAP_HEIGHT = (Integer) map.getProperties().get("height");
+        MAP_WIDTH = (Integer) map.getProperties().get("width");
+
         mapRenderer = new MapRenderer(map);
         transformation = new TiledIsoTransformation(Utils.TILE_WIDTH, Utils.TILE_HEIGHT);
-        ant = new Ant(this.game.spriteBatch, transformation);
-        rocks = new ArrayList<Rock>();
-        rocks.add(
-                new Rock(this.game.spriteBatch, transformation, 2, 2));
-
-        rocks.add(
-                new Rock(this.game.spriteBatch, transformation, 5, 4));
 
         // init shape drawer
         // TODO refactor this into initShapeDrawer
@@ -70,6 +79,19 @@ public class GameScreen implements Screen {
         shapeDrawerTextureRed = new TextureRegion(shapeDrawerColorRed, 0, 0, 1, 1);
         shapeDrawerRed = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureRed);
         pixmap.dispose();
+
+        entityManager = new EntityManager(game.spriteBatch, shapeDrawerWhite);
+        ant = new Ant(this, transformation);
+        entityManager.add(ant);
+        entityManager.add(new Rock(this, transformation, 2, 2));
+        entityManager.add(new Rock(this, transformation, 3, 2));
+        entityManager.add(new Rock(this, transformation, 4, 2));
+        entityManager.add(new Rock(this, transformation, 2, 3));
+        entityManager.add(new Rock(this, transformation, 2, 4));
+        entityManager.add(new Rock(this, transformation, 3, 4));
+        entityManager.add(new Rock(this, transformation, 4, 4));
+        entityManager.add(new Rock(this, transformation, 5, 4));
+
     }
 
     @Override
@@ -79,28 +101,16 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        Gdx.app.log("FPS",
+                "" + Gdx.graphics.getFramesPerSecond());
         ScreenUtils.clear(Color.BLACK);
         camera.update();
         game.spriteBatch.setProjectionMatrix(camera.combined);
 
-        ant.update(delta, rocks);
-
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        boolean collides = false;
-        for (Rock rock : rocks) {
-            rock.getSquare().draw(shapeDrawerWhite);
-            rock.draw();
-
-            if (ant.intersects(rock.getSquare()))
-                collides = true;
-        }
-        if (collides) {
-            ant.getCircle().draw(shapeDrawerRed);
-        } else {
-            ant.getCircle().draw(shapeDrawerWhite);
-        }
-        ant.draw();
+        entityManager.update(delta);
+        entityManager.draw();
         game.spriteBatch.end();
 
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
@@ -126,6 +136,7 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.justTouched()) {
             ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
+
         }
 
     }
@@ -154,6 +165,14 @@ public class GameScreen implements Screen {
         // TODO dispose of EVERYTHING
         ant.dispose();
         shapeDrawerColorWhite.dispose();
+    }
+
+    public int getMapWidth() {
+        return MAP_WIDTH;
+    }
+
+    public int getMapHeight() {
+        return MAP_HEIGHT;
     }
 
 }
