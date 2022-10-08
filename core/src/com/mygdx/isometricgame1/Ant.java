@@ -2,8 +2,10 @@ package com.mygdx.isometricgame1;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -16,34 +18,37 @@ public class Ant extends Entity {
 
     private static final int FACING_DIRECTION_AMOUNT = 16;
     private static final int SPRITE_DIRECTION_AMOUNT = 9;
+    private static final float WALKING_FRAME_DURATION = 1 / 26f;
+    private static final float IDLE_FRAME_DURATION = 1 / 10f;
+    private static final float SPEED = 1.4f;
+    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.05f;
     private static TextureAtlas walkingAtlas = new TextureAtlas(
             Gdx.files.internal("sprites/ant/ant-walking.atlas"));
     private static TextureAtlas idleAtlas = new TextureAtlas(
             Gdx.files.internal("sprites/ant/ant-idle-0.atlas"));
     private static HashMap<Integer, Animation<TextureRegion>> walkingAnimations;
     private static HashMap<Integer, Animation<TextureRegion>> idleAnimations;
+    private static float elapsedTime = 0;
     private final float ANIMATION_OFFSET_Y = 0.3f;
     private final float ANIMATION_OFFSET_X = 0.5f;
-    private static final float WALKING_FRAME_DURATION = 1 / 26f;
-    private static final float IDLE_FRAME_DURATION = 1 / 10f;
-    private static float elapsedTime = 0;
-    private static final float SPEED = 1.4f;
-    private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.05f;
-
+    private final float RADIUS = 25;
     private Vector2 positionScreen;
     // TODO remove duplication of this property
     private TiledIsoTransformation transformation;
-
     private Vector2 directionVector;
     private int facingDirection; // 0-15
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
-    private final float RADIUS = 25;
     /*
      * for collision detection. Visually, the center of the circle represents the
      * ant's position in the world visually.
      */
     private IsometricCircle circle;
+    private GraphPath<NavNode> path;
+    /**
+     * Used for iterating the list of NavNodes from the path
+     */
+    private int navNodeIndex;
 
     public Ant(GameScreen screen, TiledIsoTransformation transformation) {
         super(screen);
@@ -55,13 +60,30 @@ public class Ant extends Entity {
         idleAnimations = initIdleAnimations();
 
         // init private properties
-        position = new Vector2(0, 0);
+        position = new Vector2(0.5f, 0.5f);
         directionVector = new Vector2();
         targetPosition = new Vector2();
         facingDirection = 0;
 
         circle = new IsometricCircle(RADIUS);
 
+        path = null;
+        navNodeIndex = 0;
+    }
+
+    public void setTargetPosition(Vector2 targetPosition) {
+        this.targetPosition = targetPosition;
+    }
+
+    public void setState(UnitState state) {
+        this.state = state;
+    }
+
+    public void setPath(GraphPath<NavNode> path) {
+        this.path = path;
+        //set target position to path's next node
+        navNodeIndex = 0;
+        setTargetPosition(path.get(navNodeIndex).getPosition());
     }
 
     private HashMap<Integer, Animation<TextureRegion>> initWalkingAnimations() {
@@ -72,7 +94,7 @@ public class Ant extends Entity {
             walkingAnimations.put(i, new Animation<TextureRegion>(WALKING_FRAME_DURATION,
                     walkingAtlas.findRegions("walking-" + i), PlayMode.LOOP));
         } // init animations with flipped sprites for directions 9-15
-          // we need to store again references to sprites for directions 1-7
+        // we need to store again references to sprites for directions 1-7
         for (int i = 7; i > 0; i--) {
             walkingAnimations.put(animationIndex++, walkingAnimations.get(i));
         }
@@ -88,7 +110,7 @@ public class Ant extends Entity {
             idleAnimations.put(i, new Animation<TextureRegion>(IDLE_FRAME_DURATION,
                     idleAtlas.findRegions("idle-" + i), PlayMode.LOOP));
         } // init directions with flipped sprites for directions 9-15
-          // we need to store again references to sprites for directions 1-7
+        // we need to store again references to sprites for directions 1-7
         for (int i = 7; i > 0; i--) {
             idleAnimations.put(animationIndex++, idleAnimations.get(i));
         }
@@ -96,9 +118,20 @@ public class Ant extends Entity {
     }
 
     public void update(float delta, ArrayList<Entity> entities) {
+        //repeat until ant reaches goal:
+        //  every frame, move ant towards next NavNode on the path.
+        //  if ant has reached current waypoint, pop it
+        //end
+
+
         super.update(delta);
         elapsedTime += delta;
         if (state == UnitState.WALKING) {
+            //path following:
+            //updateDirection
+            updateFacingDirection(targetPosition);
+            //if arrived to target position
+            //  set target position to next in path
             position.x += SPEED * directionVector.x * delta;
             position.y += SPEED * directionVector.y * delta;
 
@@ -119,8 +152,12 @@ public class Ant extends Entity {
                  * TODO this check will probably have to be adjusted to take the unit size into
                  * consideration when I start checkin for collisions
                  */
-                // TODO add idle animation
-                state = UnitState.IDLE;
+                if (navNodeIndex < path.getCount() - 1) {
+                    setTargetPosition(path.get(++navNodeIndex).getPosition());
+                } else {
+                    state = UnitState.IDLE;
+                }
+
                 // position.set(targetPosition);
             }
         }
@@ -131,7 +168,7 @@ public class Ant extends Entity {
         this.targetPosition = targetPosition;
         // Gdx.app.log("target position", "x:" + antTargetPosition.x + " y:" +
         // antTargetPosition.y);
-        state = UnitState.WALKING;
+        //state = UnitState.WALKING;
         directionVector.set(targetPosition);
         directionVector.sub(position).nor();
         float angle = MathUtils.radiansToDegrees * MathUtils.atan2(directionVector.y, directionVector.x);

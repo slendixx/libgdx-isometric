@@ -1,6 +1,8 @@
 package com.mygdx.isometricgame1;
 
 import java.util.ArrayList;
+
+import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
@@ -63,5 +65,14 @@ public class EntityManager {
                 rock.draw(batch);
             }
         }
+    }
+
+    public Rock[] getRocks() {
+        ArrayList<Rock> rocks = new ArrayList<>();
+        for (Entity entity : entities) {
+            if (entity instanceof Rock)
+                rocks.add((Rock) entity);
+        }
+        return rocks.toArray(new Rock[0]);
     }
 }

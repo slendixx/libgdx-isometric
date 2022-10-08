@@ -1,11 +1,11 @@
 package com.mygdx.isometricgame1;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.ai.pfa.Connection;
+import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
+import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -14,24 +14,20 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class GameScreen implements Screen {
 
-    private IsometricGame1 game;
-    private OrthographicCamera camera;
-    // TODO refactor these and other constants into game class to remove duplication
     private final int VIEWPORT_WIDTH = 1600;
     private final int VIEWPORT_HEIGHT = 900;
     private final int MAP_WIDTH;
     private final int MAP_HEIGHT;
-    private TiledMap map;
-    private MapRenderer mapRenderer;
     private final float cameraSpeed = 20;
-    private TiledIsoTransformation transformation;
-
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
     Texture shapeDrawerColorWhite;
@@ -40,10 +36,19 @@ public class GameScreen implements Screen {
     TextureRegion shapeDrawerTextureRed;
     ShapeDrawer shapeDrawerWhite;
     ShapeDrawer shapeDrawerRed;
-
     // EntityManager
     EntityManager entityManager;
     Ant ant;
+    // TODO refactor these and other constants into game class to remove duplication
+    private boolean showFPS = false;
+    private IsometricGame1 game;
+    private OrthographicCamera camera;
+    private TiledMap map;
+    private MapRenderer mapRenderer;
+    private TiledIsoTransformation transformation;
+    private byte[] navGrid;
+    private NavGraph navGraph;
+    private GraphPath<NavNode> path;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -83,15 +88,87 @@ public class GameScreen implements Screen {
         entityManager = new EntityManager(game.spriteBatch, shapeDrawerWhite);
         ant = new Ant(this, transformation);
         entityManager.add(ant);
-        entityManager.add(new Rock(this, transformation, 2, 2));
-        entityManager.add(new Rock(this, transformation, 3, 2));
-        entityManager.add(new Rock(this, transformation, 4, 2));
-        entityManager.add(new Rock(this, transformation, 2, 3));
-        entityManager.add(new Rock(this, transformation, 2, 4));
-        entityManager.add(new Rock(this, transformation, 3, 4));
-        entityManager.add(new Rock(this, transformation, 4, 4));
-        entityManager.add(new Rock(this, transformation, 5, 4));
 
+        Rock[] rocks = new Rock[10];
+        rocks[0] = new Rock(this, transformation, 2, 2);
+        rocks[1] = new Rock(this, transformation, 3, 2);
+        rocks[2] = new Rock(this, transformation, 4, 2);
+        rocks[3] = new Rock(this, transformation, 2, 3);
+        rocks[4] = new Rock(this, transformation, 2, 4);
+        rocks[5] = new Rock(this, transformation, 3, 4);
+        rocks[6] = new Rock(this, transformation, 4, 4);
+        rocks[7] = new Rock(this, transformation, 5, 4);
+        rocks[8] = new Rock(this, transformation, 9, 7);
+        rocks[9] = new Rock(this, transformation, 10, 7);
+
+        for (Entity rock : rocks) {
+            entityManager.add(rock);
+        }
+
+        //update nav grid to reflect rock positions
+        /* for (Rock rock : rocks) {
+         *//*  TODO better obstacle entity manegement
+                Rocks and other obstacles could have an index property that reflects their tile position.
+                Entity manager could store them in a hash map that is indexed by this formula:
+                    y * MAP_WIDTH + x
+
+                This could prevent me from having to use this "collision" matrix to build my nav graph.
+             *//*
+            navGrid[(int) (rock.position.y * MAP_WIDTH + rock.position.x)] = 1;
+        }*/
+        //init navGraph
+        navGraph = new NavGraph();
+        for (int y = 0; y < MAP_HEIGHT; y++) {
+            for (int x = 0; x < MAP_WIDTH; x++) {
+                navGraph.addNode(new NavNode(x, y));
+            }
+        }
+        Array<NavNode> nodes = navGraph.getNodes();
+        //set occupied nodes as obstacles
+        for (Rock rock : rocks) {
+            nodes.get(((int) rock.position.y * MAP_WIDTH + (int) rock.position.x)).setIsObstacle(true);
+        }
+        //connect adjacent, non-obstacle nodes
+        for (int y = 0; y < MAP_HEIGHT; y++) {
+            for (int x = 0; x < MAP_WIDTH; x++) {
+                int currentIndex = (y * MAP_WIDTH) + x;
+                NavNode current = nodes.get(currentIndex);
+                if (current.isObstacle())
+                    continue;
+
+                try {
+                    NavNode above = nodes.get((y - 1) * MAP_WIDTH + x);
+                    if (!above.isObstacle())
+                        navGraph.connectNodes(current, above);
+                } catch (IndexOutOfBoundsException e) {
+                }
+                try {
+                    NavNode below = nodes.get((y + 1) * MAP_WIDTH + x);
+                    if (!below.isObstacle())
+                        navGraph.connectNodes(current, below);
+                } catch (IndexOutOfBoundsException e) {
+                }
+                try {
+                    if (x == MAP_WIDTH - 1)
+                        throw new IndexOutOfBoundsException();
+
+                    NavNode toTheRight = nodes.get(y * MAP_WIDTH + (x + 1));
+                    if (!toTheRight.isObstacle())
+                        navGraph.connectNodes(current, toTheRight);
+                } catch (IndexOutOfBoundsException e) {
+                }
+                try {
+                    if (x == 0)
+                        throw new IndexOutOfBoundsException();
+                    NavNode toTheLeft = nodes.get(y * MAP_WIDTH + (x - 1));
+                    if (!toTheLeft.isObstacle())
+                        navGraph.connectNodes(current, toTheLeft);
+                } catch (IndexOutOfBoundsException e) {
+                }
+            }
+        }
+        path = null;
+        //path = navGraph.findPath(nodes.get(0), nodes.get(156));
     }
 
     @Override
@@ -101,14 +178,31 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.app.log("FPS",
-                "" + Gdx.graphics.getFramesPerSecond());
+        if (showFPS) {
+            Gdx.app.log("FPS",
+                    "" + Gdx.graphics.getFramesPerSecond());
+        }
         ScreenUtils.clear(Color.BLACK);
         camera.update();
         game.spriteBatch.setProjectionMatrix(camera.combined);
 
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
+        //render nav graph
+//        for (NavConnection connection : navGraph.getConnections()) {
+//            connection.draw(shapeDrawerWhite, false);
+//        }
+//        for (NavNode navNode : navGraph.getNodes()) {
+//            navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, false);
+//        }
+        //render path
+        if (path != null) {
+
+            for (NavNode navNode : path) {
+                navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true);
+            }
+        }
+        //render entities
         entityManager.update(delta);
         entityManager.draw();
         game.spriteBatch.end();
@@ -134,10 +228,54 @@ public class GameScreen implements Screen {
             camera.zoom -= 0.25f;
         }
 
-        if (Gdx.input.justTouched()) {
-            ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
 
+        if (Gdx.input.justTouched()) {
+            //ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
+
+
+            //get ant tile
+            int antTileX = (int) Math.floor(ant.getPosition().x);
+            int antTileY = (int) Math.floor(ant.getPosition().y);
+            //create NavNode start from ant position
+            NavNode start = new NavNode(antTileX, antTileY);
+            //get NavNode that corresponds with the tile the ant is standing on
+            NavNode closestToStart = navGraph.getNodes().get(antTileY * MAP_WIDTH + antTileX);
+            //add start to navGraph
+            navGraph.addNode(start);
+            //assign it's connections to start
+            for (Connection<NavNode> connection :
+                    navGraph.getConnections(closestToStart)) {
+                navGraph.connectNodes(start, connection.getToNode());
+            }
+            //get click position
+            Vector3 clickUnprojected = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            Vector2 clickPosition = transformation.untransform(clickUnprojected.x, clickUnprojected.y);
+            int clickTileX = (int) Math.floor(clickPosition.y); //for some reason, untransforming these coordinates
+            int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping these two
+            //Gdx.app.log("clickTileX", "" + clickTileX);
+            //Gdx.app.log("clickTileY", "" + clickTileY);
+
+            //create NavNode goal from click position
+            //TODO make NavNode positions float to allow pathfinding from non-round positions
+            NavNode goal = new NavNode(clickTileX, clickTileY);
+            //get NavNode that corresponds with the tile that was clicked
+            NavNode closestToGoal = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
+            //add goal to navGraph
+            navGraph.addNode(goal);
+            //assign it's connections to goal
+            for (Connection<NavNode> connection :
+                    navGraph.getConnections(closestToGoal)) {
+                navGraph.connectNodes(connection.getToNode(), goal);
+            }
+            //find path from start to goal
+            path = navGraph.findPath(start, goal);
+
+            //assign this new path to the ant's path property
+            ant.setPath(path);
+            //set ant state to WALKING
+            ant.setState(UnitState.WALKING);
         }
+
 
     }
 
