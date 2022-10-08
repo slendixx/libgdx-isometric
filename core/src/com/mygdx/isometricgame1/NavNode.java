@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
+
 public class NavNode {
     private Vector2 position;
     private int index;
@@ -16,8 +17,8 @@ public class NavNode {
     private float labelScreenX;
     private float labelScreenY;
 
-    public NavNode(int x, int y) {
-        position = new Vector2((float) x + 0.5f, (float) y + 0.5f);
+    public NavNode(float x, float y) {
+        position = new Vector2(x, y);
         circle = new IsometricCircle(10f);
         circle.setPosition(position);
         isObstacle = false;

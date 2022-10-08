@@ -120,7 +120,7 @@ public class GameScreen implements Screen {
         navGraph = new NavGraph();
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
-                navGraph.addNode(new NavNode(x, y));
+                navGraph.addNode(new NavNode(x + 0.5f, y + 0.5f));
             }
         }
         Array<NavNode> nodes = navGraph.getNodes();
@@ -198,7 +198,18 @@ public class GameScreen implements Screen {
         //render path
         if (path != null) {
 
+            for (int i = 0; i < path.getCount() - 1; i++) {
+                NavNode currentNode = path.get(i);
+                NavNode nextNode = path.get(i + 1);
+                for (Connection<NavNode> connection : navGraph.getConnections(currentNode)) {
+                    if (connection.getFromNode() == currentNode && connection.getToNode() == nextNode) {
+                        NavConnection navConnection = (NavConnection) connection;
+                        navConnection.draw(shapeDrawerWhite, true);
+                    }
+                }
+            }
             for (NavNode navNode : path) {
+                navGraph.getConnections(navNode);
                 navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true);
             }
         }
@@ -236,8 +247,12 @@ public class GameScreen implements Screen {
             //get ant tile
             int antTileX = (int) Math.floor(ant.getPosition().x);
             int antTileY = (int) Math.floor(ant.getPosition().y);
+            Gdx.app.log("antTileX", "" + antTileX);
+            Gdx.app.log("antTileY", "" + antTileY);
+            // Gdx.app.log("antX", "" + ant.getPosition().x);
+            // Gdx.app.log("antY", "" + ant.getPosition().y);
             //create NavNode start from ant position
-            NavNode start = new NavNode(antTileX, antTileY);
+            NavNode start = new NavNode(ant.getPosition().x, ant.getPosition().y);
             //get NavNode that corresponds with the tile the ant is standing on
             NavNode closestToStart = navGraph.getNodes().get(antTileY * MAP_WIDTH + antTileX);
             //add start to navGraph
@@ -252,12 +267,11 @@ public class GameScreen implements Screen {
             Vector2 clickPosition = transformation.untransform(clickUnprojected.x, clickUnprojected.y);
             int clickTileX = (int) Math.floor(clickPosition.y); //for some reason, untransforming these coordinates
             int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping these two
-            //Gdx.app.log("clickTileX", "" + clickTileX);
-            //Gdx.app.log("clickTileY", "" + clickTileY);
+            Gdx.app.log("clickTileX", "" + clickTileX);
+            Gdx.app.log("clickTileY", "" + clickTileY);
 
             //create NavNode goal from click position
-            //TODO make NavNode positions float to allow pathfinding from non-round positions
-            NavNode goal = new NavNode(clickTileX, clickTileY);
+            NavNode goal = new NavNode(clickPosition.y, clickPosition.x);
             //get NavNode that corresponds with the tile that was clicked
             NavNode closestToGoal = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
             //add goal to navGraph
@@ -270,10 +284,15 @@ public class GameScreen implements Screen {
             //find path from start to goal
             path = navGraph.findPath(start, goal);
 
+            //smooth path
+
             //assign this new path to the ant's path property
             ant.setPath(path);
             //set ant state to WALKING
             ant.setState(UnitState.WALKING);
+            /*
+            TODO delete start, goal and connections to them after the unit has reached it's goal
+             */
         }
 
 
