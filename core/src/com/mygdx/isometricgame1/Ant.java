@@ -2,10 +2,8 @@ package com.mygdx.isometricgame1;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
@@ -33,11 +31,13 @@ public class Ant extends Entity {
     private final float ANIMATION_OFFSET_Y = 0.3f;
     private final float ANIMATION_OFFSET_X = 0.5f;
     private final float RADIUS = 25;
+    private final float UPDATE_FACING_DIRECTION_DELAY = 0.25f;
     private Vector2 positionScreen;
     // TODO remove duplication of this property
     private TiledIsoTransformation transformation;
     private Vector2 directionVector;
     private int facingDirection; // 0-15
+    private float updateFacingDirectionTimer;
     private UnitState state = UnitState.IDLE;
     private Vector2 targetPosition;
     /*
@@ -65,6 +65,7 @@ public class Ant extends Entity {
         directionVector = new Vector2();
         targetPosition = new Vector2();
         facingDirection = 0;
+        updateFacingDirectionTimer = UPDATE_FACING_DIRECTION_DELAY;
 
         circle = new IsometricCircle(RADIUS);
 

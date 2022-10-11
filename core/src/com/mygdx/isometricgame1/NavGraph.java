@@ -1,5 +1,6 @@
 package com.mygdx.isometricgame1;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.GraphPath;
@@ -8,7 +9,7 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
-public class NavGraph implements IndexedGraph<NavNode> {
+public class NavGraph implements IndexedGraph<NavNode>, ObstacleManager {
 
     NavHeuristic heuristic;
     Array<NavNode> nodes;
@@ -69,5 +70,10 @@ public class NavGraph implements IndexedGraph<NavNode> {
             return map.get(from);
         }
         return new Array<>(0);
+    }
+
+    @Override
+    public boolean tileIsObstacle(int x, int y, int gameMapWidth) {
+        return nodes.get(y * gameMapWidth + x).isObstacle();
     }
 }

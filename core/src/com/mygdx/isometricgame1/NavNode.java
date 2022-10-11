@@ -53,4 +53,9 @@ public class NavNode {
         font.draw(batch, "" + index, labelScreenX, labelScreenY);
     }
 
+    public void draw(ShapeDrawer shapeDrawer, SpriteBatch batch, BitmapFont font, boolean inPath, String label) {
+        circle.draw(shapeDrawer, inPath ? Color.GREEN : Color.WHITE);
+        font.draw(batch, label, labelScreenX, labelScreenY);
+    }
+
 }

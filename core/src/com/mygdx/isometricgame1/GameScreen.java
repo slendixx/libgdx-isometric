@@ -49,6 +49,8 @@ public class GameScreen implements Screen {
     private byte[] navGrid;
     private NavGraph navGraph;
     private GraphPath<NavNode> path;
+    private RayCaster rayCaster;
+    private PathSmoother pathSmoother;
 
     // TODO try to incorporate a viewport to prevent distortion when resizing screen
     public GameScreen(
@@ -169,6 +171,8 @@ public class GameScreen implements Screen {
         }
         path = null;
         //path = navGraph.findPath(nodes.get(0), nodes.get(156));
+        rayCaster = new RayCaster(navGraph, MAP_WIDTH, MAP_HEIGHT);
+        pathSmoother = new PathSmoother(rayCaster);
     }
 
     @Override
@@ -201,17 +205,11 @@ public class GameScreen implements Screen {
             for (int i = 0; i < path.getCount() - 1; i++) {
                 NavNode currentNode = path.get(i);
                 NavNode nextNode = path.get(i + 1);
-                for (Connection<NavNode> connection : navGraph.getConnections(currentNode)) {
-                    if (connection.getFromNode() == currentNode && connection.getToNode() == nextNode) {
-                        NavConnection navConnection = (NavConnection) connection;
-                        navConnection.draw(shapeDrawerWhite, true);
-                    }
-                }
+                new IsometricLine(currentNode.getPosition(), nextNode.getPosition()).draw(shapeDrawerWhite, Color.GREEN);
+                currentNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + i);
             }
-            for (NavNode navNode : path) {
-                navGraph.getConnections(navNode);
-                navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true);
-            }
+            path.get(path.getCount() - 1).draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + (path.getCount() - 1));
+
         }
         //render entities
         entityManager.update(delta);
@@ -239,6 +237,24 @@ public class GameScreen implements Screen {
             camera.zoom -= 0.25f;
         }
 
+        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+            Vector3 mousePositionUnprojected = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+            Vector2 mousePosition = transformation.untransform(mousePositionUnprojected.x, mousePositionUnprojected.y);
+            Vector2 goal = new Vector2(mousePosition.y, mousePosition.x);
+            Vector2 intersectionPosition = rayCaster.findIntersection(ant.getPosition(), goal);
+            IsometricLine ray = new IsometricLine(ant.getPosition(), goal);
+            game.spriteBatch.begin();
+            if (intersectionPosition == null) {
+                ray.draw(shapeDrawerWhite, Color.GREEN);
+            }
+            if (intersectionPosition != null) {
+                ray.draw(shapeDrawerWhite, Color.RED);
+                IsometricCircle intersectionCircle = new IsometricCircle(20f);
+                intersectionCircle.setPosition(intersectionPosition);
+                intersectionCircle.draw(shapeDrawerRed);
+            }
+            game.spriteBatch.end();
+        }
 
         if (Gdx.input.justTouched()) {
             //ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
@@ -247,8 +263,8 @@ public class GameScreen implements Screen {
             //get ant tile
             int antTileX = (int) Math.floor(ant.getPosition().x);
             int antTileY = (int) Math.floor(ant.getPosition().y);
-            Gdx.app.log("antTileX", "" + antTileX);
-            Gdx.app.log("antTileY", "" + antTileY);
+            //Gdx.app.log("antTileX", "" + antTileX);
+            //Gdx.app.log("antTileY", "" + antTileY);
             // Gdx.app.log("antX", "" + ant.getPosition().x);
             // Gdx.app.log("antY", "" + ant.getPosition().y);
             //create NavNode start from ant position
@@ -267,8 +283,8 @@ public class GameScreen implements Screen {
             Vector2 clickPosition = transformation.untransform(clickUnprojected.x, clickUnprojected.y);
             int clickTileX = (int) Math.floor(clickPosition.y); //for some reason, untransforming these coordinates
             int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping these two
-            Gdx.app.log("clickTileX", "" + clickTileX);
-            Gdx.app.log("clickTileY", "" + clickTileY);
+            //Gdx.app.log("clickTileX", "" + clickTileX);
+            //Gdx.app.log("clickTileY", "" + clickTileY);
 
             //create NavNode goal from click position
             NavNode goal = new NavNode(clickPosition.y, clickPosition.x);
@@ -285,6 +301,7 @@ public class GameScreen implements Screen {
             path = navGraph.findPath(start, goal);
 
             //smooth path
+            path = pathSmoother.smooth(path);
 
             //assign this new path to the ant's path property
             ant.setPath(path);
@@ -292,6 +309,7 @@ public class GameScreen implements Screen {
             ant.setState(UnitState.WALKING);
             /*
             TODO delete start, goal and connections to them after the unit has reached it's goal
+            TODO debug rayCaster not detecting rock vertex vecinities as obstacles when standing next to rocks
              */
         }
 
