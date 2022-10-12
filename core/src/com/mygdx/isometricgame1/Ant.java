@@ -51,6 +51,7 @@ public class Ant extends Entity {
      */
     private int navNodeIndex;
 
+    //TODO refactor transformation out of the constructor
     public Ant(GameScreen screen, TiledIsoTransformation transformation) {
         super(screen);
 

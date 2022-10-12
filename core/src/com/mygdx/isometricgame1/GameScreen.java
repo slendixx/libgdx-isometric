@@ -12,6 +12,10 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.MapLayers;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
@@ -20,6 +24,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
+
+import java.util.Iterator;
 
 public class GameScreen implements Screen {
 
@@ -58,7 +64,7 @@ public class GameScreen implements Screen {
         this.game = game;
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.setToOrtho(false);
-        map = new TmxMapLoader().load("maps/map-1.tmx");
+        map = new TmxMapLoader().load("maps/export/map-1.tmx");
         /*
          * MapProperties props = map.getProperties();
          * Iterator<String> iter = props.getKeys();
@@ -87,25 +93,11 @@ public class GameScreen implements Screen {
         shapeDrawerRed = new ShapeDrawer(game.spriteBatch, shapeDrawerTextureRed);
         pixmap.dispose();
 
-        entityManager = new EntityManager(game.spriteBatch, shapeDrawerWhite);
-        ant = new Ant(this, transformation);
-        entityManager.add(ant);
+        entityManager = new EntityManager(this, game.spriteBatch, shapeDrawerWhite);
+        entityManager.parseMap(map);
 
-        Rock[] rocks = new Rock[10];
-        rocks[0] = new Rock(this, transformation, 2, 2);
-        rocks[1] = new Rock(this, transformation, 3, 2);
-        rocks[2] = new Rock(this, transformation, 4, 2);
-        rocks[3] = new Rock(this, transformation, 2, 3);
-        rocks[4] = new Rock(this, transformation, 2, 4);
-        rocks[5] = new Rock(this, transformation, 3, 4);
-        rocks[6] = new Rock(this, transformation, 4, 4);
-        rocks[7] = new Rock(this, transformation, 5, 4);
-        rocks[8] = new Rock(this, transformation, 9, 7);
-        rocks[9] = new Rock(this, transformation, 10, 7);
 
-        for (Entity rock : rocks) {
-            entityManager.add(rock);
-        }
+        ant = entityManager.getAnt();
 
         //update nav grid to reflect rock positions
         /* for (Rock rock : rocks) {
@@ -127,7 +119,7 @@ public class GameScreen implements Screen {
         }
         Array<NavNode> nodes = navGraph.getNodes();
         //set occupied nodes as obstacles
-        for (Rock rock : rocks) {
+        for (Rock rock : entityManager.getRocks()) {
             nodes.get(((int) rock.position.y * MAP_WIDTH + (int) rock.position.x)).setIsObstacle(true);
         }
         //connect adjacent, non-obstacle nodes
@@ -173,6 +165,10 @@ public class GameScreen implements Screen {
         //path = navGraph.findPath(nodes.get(0), nodes.get(156));
         rayCaster = new RayCaster(navGraph, MAP_WIDTH, MAP_HEIGHT);
         pathSmoother = new PathSmoother(rayCaster);
+    }
+
+    public TiledIsoTransformation getTransformation() {
+        return transformation;
     }
 
     @Override

@@ -3,48 +3,60 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "map-2.tmx",
+    "activeFile": "map-1.tmx",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
+        ".",
+        "object templates"
     ],
     "fileStates": {
         "map-1.tmx": {
-            "scale": 0.41176562499999997,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 0.75,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1597.9964330436765,
-                "y": 797.7839335180057
+                "x": 1267.3333333333335,
+                "y": 369.33333333333337
             }
         },
         "map-2.tmx": {
             "scale": 0.353875,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 1602.2606852702224,
-                "y": 805.3691275167787
+                "x": 1595.1960438007773,
+                "y": 1181.2080536912752
             }
+        },
+        "objects.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "terrain-1.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         }
     },
+    "last.exportedFilePath": "C:/Users/Claudio/libgdx-projects/isometric-game-1/assets/maps/export",
     "last.imagePath": "C:/Users/Claudio/libgdx-projects/isometric-game-1/assets/maps",
+    "last.objectTemplatePath": "C:/Users/Claudio/libgdx-projects/isometric-game-1/assets/maps/object templates",
+    "map.lastUsedExportFilter": "Todos los archivos (*)",
     "map.lastUsedFormat": "tmx",
     "map.layerDataFormat": null,
     "map.orientation": null,
     "map.tileHeight": 64,
     "map.tileWidth": 128,
     "openFiles": [
-        "map-1.tmx",
         "terrain-1.tsx",
-        "map-2.tmx"
+        "map-1.tmx"
     ],
     "project": "maps.tiled-project",
     "recentFiles": [
-        "map-1.tmx",
         "terrain-1.tsx",
-        "map-2.tmx"
+        "map-1.tmx",
+        "map-2.tmx",
+        "objects.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

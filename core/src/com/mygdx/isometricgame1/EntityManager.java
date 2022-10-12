@@ -2,21 +2,33 @@ package com.mygdx.isometricgame1;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.ai.pfa.GraphPath;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import com.badlogic.gdx.maps.MapLayers;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Vector2;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class EntityManager {
 
     public ArrayList<Entity> entities;
+    Ant ant;
+    GameScreen screen;
     private SpriteBatch batch;
     private ShapeDrawer shapeDrawer;
 
-    public EntityManager(SpriteBatch batch, ShapeDrawer shapeDrawer) {
+    public EntityManager(GameScreen screen, SpriteBatch batch, ShapeDrawer shapeDrawer) {
+        this.screen = screen;
         entities = new ArrayList<>();
         this.batch = batch;
         this.shapeDrawer = shapeDrawer;
+    }
+
+    public Ant getAnt() {
+        return ant;
     }
 
     public void add(Entity entity) {
@@ -75,4 +87,39 @@ public class EntityManager {
         }
         return rocks.toArray(new Rock[0]);
     }
+
+    public void parseMap(TiledMap map) {
+        //Read https://lightrun.com/answers/libgdx-libgdx-make-use-of-tiledmapobjects-templates
+        MapLayers layers = map.getLayers();
+        MapObjects objects = layers.get("objects").getObjects();
+        Vector2 position = new Vector2();
+
+        for (MapObject object : objects) {
+            /*Gdx.app.log("object", "" + object.getName());
+            MapProperties mapProps = object.getProperties();
+            Iterator<String> iter = mapProps.getKeys();
+            while (iter.hasNext()) {
+                String key = iter.next();
+                Gdx.app.log(key, mapProps.get(key).toString());
+            }*/
+            if (object.getName().equals("Ant")) {
+
+                ant = new Ant(screen, screen.getTransformation());
+                position = fromMapPosition((float) object.getProperties().get("x"), (float) object.getProperties().get("y"), position);
+                position.add(0.5f, 0.5f);
+                ant.setPosition(position);
+                entities.add(ant);
+            }
+            if (object.getName().equals("Rock")) {
+                position = fromMapPosition((float) object.getProperties().get("x"), (float) object.getProperties().get("y"), position);
+                entities.add(new Rock(screen, screen.getTransformation(), (int) position.x, (int) position.y));
+
+            }
+        }
+    }
+
+    private Vector2 fromMapPosition(float mapX, float mapY, Vector2 position) {
+        return position.set((mapX / 64.0f) - 1, (mapY / 64.0f));
+    }
 }
+

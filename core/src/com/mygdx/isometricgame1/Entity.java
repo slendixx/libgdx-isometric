@@ -26,11 +26,15 @@ public abstract class Entity {
     public void setPosition(float x, float y) {
         position.set(x, y);
         updateZIndex(screen.getMapWidth(), screen.getMapHeight());
-
     }
 
     public Vector2 getPosition() {
         return position;
+    }
+
+    public void setPosition(Vector2 position) {
+        this.position.set(position);
+        updateZIndex(screen.getMapWidth(), screen.getMapHeight());
     }
 
     public int getZIndex() {

@@ -12,19 +12,20 @@ import com.badlogic.gdx.math.Vector2;
 
 public class MapRenderer {
 
-    // unit vectors i & j describe the projection
-    private Vector2 transformedPos;
-    private ArrayList<TiledMapTileLayer> tileLayers;
     private final int MAP_WIDTH; // in tiles
     private final int MAP_HEIGHT; // in tiles
     private final int TILE_WIDTH; // in pixels
     private final int TILE_HEIGHT; // in pixels
+    // unit vectors i & j describe the projection
+    private Vector2 transformedPos;
+    private ArrayList<TiledMapTileLayer> tileLayers;
     private TextureRegion textureBuffer;
     private TiledIsoTransformation transformation;
 
     public MapRenderer(TiledMap map) {
         tileLayers = new ArrayList<TiledMapTileLayer>();
         tileLayers.add((TiledMapTileLayer) map.getLayers().get(0));
+
         MapProperties props = map.getProperties();
         MAP_WIDTH = props.get("width", Integer.class);
         MAP_HEIGHT = props.get("height", Integer.class);
