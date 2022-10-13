@@ -3,6 +3,7 @@ package com.mygdx.isometricgame1;
 import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import com.badlogic.gdx.maps.MapLayers;
@@ -52,6 +53,7 @@ public class EntityManager {
 
     public void update(float delta) {
         for (Entity entity : entities) {
+            entity.setColliding(false);
             if (entity instanceof Ant) {
                 Ant ant = (Ant) entity;
                 ant.update(delta, entities);
@@ -65,14 +67,14 @@ public class EntityManager {
         for (Entity entity : entities) {
             if (entity instanceof Ant) {
                 Ant ant = (Ant) entity;
-                ant.getCircle().draw(shapeDrawer);
+                ant.getCircle().draw(shapeDrawer, ant.isColliding() ? Color.RED : Color.WHITE);
                 // TODO Get reference property to SpriteBatch out of Ant class
                 ant.draw(batch);
                 continue;
             }
             if (entity instanceof Rock) {
                 Rock rock = (Rock) entity;
-                rock.getSquare().draw(shapeDrawer);
+                rock.getSquare().draw(shapeDrawer, rock.isColliding() ? Color.RED : Color.WHITE);
                 // TODO Get reference property to SpriteBatch out of Rock class
                 rock.draw(batch);
             }

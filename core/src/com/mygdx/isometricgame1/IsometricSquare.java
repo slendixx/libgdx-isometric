@@ -1,12 +1,15 @@
 package com.mygdx.isometricgame1;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class IsometricSquare {
 
+    //TODO remove dupplication among isometric shape classes
+    private static Color DEFAULT_COLOR = Color.WHITE;
     private float[] vertices;
     private Vector2 position;
     private TiledIsoTransformation transformation;
@@ -42,6 +45,12 @@ public class IsometricSquare {
 
     public void draw(ShapeDrawer shapeDrawer) {
         shapeDrawer.polygon(vertices);
+    }
+
+    public void draw(ShapeDrawer shapeDrawer, Color color) {
+        shapeDrawer.setColor(color);
+        shapeDrawer.polygon(vertices);
+        shapeDrawer.setColor(DEFAULT_COLOR);
     }
 
     public Vector2 getPosition() {

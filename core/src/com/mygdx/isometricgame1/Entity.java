@@ -6,12 +6,22 @@ public abstract class Entity {
     protected Vector2 position;
     protected int zIndex;
     protected GameScreen screen;
+    protected boolean colliding;
 
     public Entity(GameScreen screen) {
         position = new Vector2(0, 0);
         zIndex = 0;
         updateZIndex(screen.getMapWidth(), screen.getMapHeight());
         this.screen = screen;
+        colliding = false;
+    }
+
+    public boolean isColliding() {
+        return colliding;
+    }
+
+    public void setColliding(boolean colliding) {
+        this.colliding = colliding;
     }
 
     public void update(float delta) {

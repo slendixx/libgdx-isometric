@@ -51,6 +51,7 @@ public class Ant extends Entity {
      */
     private int navNodeIndex;
 
+
     //TODO refactor transformation out of the constructor
     public Ant(GameScreen screen, TiledIsoTransformation transformation) {
         super(screen);
@@ -143,8 +144,14 @@ public class Ant extends Entity {
                  * when checking for collision with ants, remember to check
                  * if entity is a reference to the object itself
                  */
-                if (entity instanceof Rock)
-                    collide(((Rock) entity).getSquare());
+                boolean entitiesCollided;
+                if (entity instanceof Rock) {
+                    entitiesCollided = collide(((Rock) entity).getSquare());
+                    if (entitiesCollided) {
+                        this.setColliding(true);
+                        entity.setColliding(true);
+                    }
+                }
             }
 
             // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
@@ -280,7 +287,13 @@ public class Ant extends Entity {
         return distanceToSquareCorner <= Math.pow(RADIUS, 2);
     }
 
-    public void collide(IsometricSquare square) {
+    /**
+     * Applies vector-based collision to the calling instance.
+     *
+     * @param square
+     * @return true if collision was applied. false otherwise
+     */
+    public boolean collide(IsometricSquare square) {
 
         Vector2 squarePosition = square.getPosition();
         Vector2 circlePosition = this.circle.getPosition();
@@ -299,7 +312,8 @@ public class Ant extends Entity {
 
             position.sub(toNearest.nor().scl((float) (RADIUS -
                     distanceToNearestPoint) / 128));
-
+            return true;
         }
+        return false;
     }
 }
