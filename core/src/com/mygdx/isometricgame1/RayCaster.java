@@ -100,6 +100,14 @@ public class RayCaster {
         int goalX = (int) Math.floor(goal.getPosition().x);
         int goalY = (int) Math.floor(goal.getPosition().y);
         while (!tileFound && distance < MAX_DISTANCE) {
+            //make sure the ray doesn't go out of bounds
+            if (checkX >= 0 && checkX < MAP_WIDTH && checkY >= 0 && checkY < MAP_HEIGHT) {
+                if (checkX == goalX && checkY == goalY) {
+                    return true;
+                }
+                if (obstacleManager.tileIsObstacle(checkX, checkY, MAP_WIDTH))
+                    return false;
+            }
             //walk a tile of distance on one axis
             if (rayLength.x < rayLength.y) {
                 checkX += step.x;
@@ -111,14 +119,7 @@ public class RayCaster {
                 rayLength.y += rayUnitStepSize.y;
             }
 
-            //make sure the ray doesn't go out of bounds
-            if (checkX >= 0 && checkX < MAP_WIDTH && checkY >= 0 && checkY < MAP_HEIGHT) {
-                if (checkX == goalX && checkY == goalY) {
-                    return true;
-                }
-                if (obstacleManager.tileIsObstacle(checkX, checkY, MAP_WIDTH))
-                    return false;
-            }
+
             /*
             //get the point of intersection with the obstacle
             //not needed in this game
