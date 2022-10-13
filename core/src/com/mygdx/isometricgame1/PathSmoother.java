@@ -92,38 +92,50 @@ public class PathSmoother {
         if (pathLength < MIN_NODE_COUNT)
             return path;
         ArrayList<NavNode> newPath = new ArrayList<>();
-        newPath.add(path.get(0));
+        //newPath.add(path.get(0));
         boolean reiterating;
         boolean beingReiterated;
-        int indexOffset;
-        int lastVisitedIndex = 0;
+        int visitedIndex;
+        int currentIndex = 0;
+        NavNode current;
+        NavNode visited;
 
         while (true) {
             beingReiterated = false;
-            indexOffset = STARTING_OFFSET;
-            if (lastVisitedIndex + indexOffset >= pathLength) {
+            visitedIndex = STARTING_OFFSET;
+            if (currentIndex + visitedIndex >= pathLength) {
                 break;
             }
 
             do {
                 reiterating = false;
-                if (lastVisitedIndex + indexOffset >= pathLength) {
+                if (currentIndex + visitedIndex >= pathLength) {
                     break;
                 }
-                if (rayCaster.nodesHaveVisibility(path.get(lastVisitedIndex), path.get(lastVisitedIndex + indexOffset))) {
+                current = path.get(currentIndex);
+                visited = path.get(currentIndex + visitedIndex);
+                if (rayCaster.nodesHaveVisibility(current, visited)) {
                     if (beingReiterated) {
-                        newPath.set(newPath.size() - 1, path.get(lastVisitedIndex + indexOffset));
+                        newPath.set(newPath.size() - 1, visited);
                     } else {
-                        newPath.add(path.get(lastVisitedIndex + indexOffset));
+                        if (!newPath.contains(current))
+                            newPath.add(current);
+                        newPath.add(visited);
                     }
                     reiterating = true;
                     beingReiterated = true;
-                    indexOffset++;
+                    visitedIndex++;
+                } else {
+                    if (!newPath.contains(current))
+                        newPath.add(current);
                 }
             } while (reiterating);
-            lastVisitedIndex += indexOffset - 1;
+            //go back to the node before the last visited one (the one that current node doesn't have visibility to)
+            currentIndex += visitedIndex - 1;
+
         }
-        if (lastVisitedIndex == pathLength - 2) {
+        //for odd-sized paths
+        if (currentIndex == pathLength - 2) {
             newPath.add(path.get(pathLength - 1));
         }
 

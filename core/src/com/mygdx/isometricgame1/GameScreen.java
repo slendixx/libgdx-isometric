@@ -188,25 +188,8 @@ public class GameScreen implements Screen {
 
         game.spriteBatch.begin();
         mapRenderer.render(game.spriteBatch);
-        //render nav graph
-//        for (NavConnection connection : navGraph.getConnections()) {
-//            connection.draw(shapeDrawerWhite, false);
-//        }
-//        for (NavNode navNode : navGraph.getNodes()) {
-//            navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, false);
-//        }
-        //render path
-        if (path != null) {
 
-            for (int i = 0; i < path.getCount() - 1; i++) {
-                NavNode currentNode = path.get(i);
-                NavNode nextNode = path.get(i + 1);
-                new IsometricLine(currentNode.getPosition(), nextNode.getPosition()).draw(shapeDrawerWhite, Color.GREEN);
-                currentNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + i);
-            }
-            path.get(path.getCount() - 1).draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + (path.getCount() - 1));
 
-        }
         //render entities
         entityManager.update(delta);
         entityManager.draw();
@@ -299,6 +282,8 @@ public class GameScreen implements Screen {
             //smooth path
             path = pathSmoother.smooth(path);
 
+            //render path
+
             //assign this new path to the ant's path property
             ant.setPath(path);
             //set ant state to WALKING
@@ -309,7 +294,27 @@ public class GameScreen implements Screen {
              */
         }
 
+        //render nav graph
+        //game.spriteBatch.begin();
+        //for (NavConnection connection : navGraph.getConnections()) {
+        //    connection.draw(shapeDrawerWhite, false);
+        //}
+        //for (NavNode navNode : navGraph.getNodes()) {
+        //    navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, false);
+        //}
+        //game.spriteBatch.end();
+        game.spriteBatch.begin();
+        if (path != null) {
 
+            for (int i = 0; i < path.getCount() - 1; i++) {
+                NavNode currentNode = path.get(i);
+                NavNode nextNode = path.get(i + 1);
+                new IsometricLine(currentNode.getPosition(), nextNode.getPosition()).draw(shapeDrawerWhite, Color.GREEN);
+                currentNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + i);
+            }
+            path.get(path.getCount() - 1).draw(shapeDrawerWhite, game.spriteBatch, game.font, true, "" + (path.getCount() - 1));
+        }
+        game.spriteBatch.end();
     }
 
     @Override
