@@ -23,6 +23,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
 import java.util.Iterator;
@@ -48,6 +49,7 @@ public class GameScreen implements Screen {
     // TODO refactor these and other constants into game class to remove duplication
     private boolean showFPS = false;
     private IsometricGame1 game;
+    private ExtendViewport viewport;
     private OrthographicCamera camera;
     private TiledMap map;
     private MapRenderer mapRenderer;
@@ -64,6 +66,7 @@ public class GameScreen implements Screen {
         this.game = game;
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         camera.setToOrtho(false);
+        viewport = new ExtendViewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, camera);
         map = new TmxMapLoader().load("maps/export/map-1.tmx");
         /*
          * MapProperties props = map.getProperties();
@@ -319,6 +322,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
+        viewport.update(width, height);
     }
 
     @Override
