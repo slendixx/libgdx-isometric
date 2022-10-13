@@ -128,6 +128,8 @@ public class PathSmoother {
                 } else {
                     if (!newPath.contains(current))
                         newPath.add(current);
+                    if (newPath.size() == 1)
+                        newPath.add(path.get(currentIndex + 1));
                 }
             } while (reiterating);
             //go back to the node before the last visited one (the one that current node doesn't have visibility to)
