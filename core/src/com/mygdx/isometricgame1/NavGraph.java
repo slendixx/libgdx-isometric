@@ -1,24 +1,22 @@
 package com.mygdx.isometricgame1;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
-import com.badlogic.gdx.ai.pfa.GraphPath;
+import com.badlogic.gdx.ai.pfa.*;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
+
 public class NavGraph implements IndexedGraph<NavNode>, ObstacleManager {
 
-    NavHeuristic heuristic;
+    NavHeuristic navHeuristic;
     Array<NavNode> nodes;
     Array<NavConnection> connections;
     ObjectMap<NavNode, Array<Connection<NavNode>>> map;
     private int lastNodeIndex;
 
     public NavGraph() {
-        heuristic = new NavHeuristic();
+        navHeuristic = new NavHeuristic();
         nodes = new Array<>();
         connections = new Array<>();
         map = new ObjectMap<>();
@@ -40,7 +38,7 @@ public class NavGraph implements IndexedGraph<NavNode>, ObstacleManager {
     }
 
     public void connectNodes(NavNode from, NavNode to) {
-        NavConnection connection = new NavConnection(from, to);
+        NavConnection connection = new NavConnection(from, to, from.isObstacle() || to.isObstacle());
         if (!map.containsKey(from)) {
             map.put(from, new Array<Connection<NavNode>>());
         }
@@ -50,7 +48,8 @@ public class NavGraph implements IndexedGraph<NavNode>, ObstacleManager {
 
     public GraphPath<NavNode> findPath(NavNode start, NavNode goal) {
         GraphPath<NavNode> path = new DefaultGraphPath<>();
-        new IndexedAStarPathFinder<>(this).searchNodePath(start, goal, heuristic, path);
+        new IndexedAStarPathFinder<NavNode>(this).searchNodePath(start, goal, navHeuristic, path);
+
         return path;
     }
 

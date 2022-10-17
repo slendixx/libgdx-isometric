@@ -48,6 +48,11 @@ public class NavNode {
         return position;
     }
 
+    @Override
+    public String toString() {
+        return "x:" + position.x + " y:" + position.y;
+    }
+
     public void draw(ShapeDrawer shapeDrawer, SpriteBatch batch, BitmapFont font, boolean inPath) {
         circle.draw(shapeDrawer, inPath ? Color.GREEN : Color.WHITE);
         font.draw(batch, "" + index, labelScreenX, labelScreenY);

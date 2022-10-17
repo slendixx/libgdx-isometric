@@ -12,11 +12,14 @@ public class NavConnection implements Connection<NavNode> {
 
     private IsometricLine line;
 
-    public NavConnection(NavNode from, NavNode to) {
+    public NavConnection(NavNode from, NavNode to, boolean isObstacle) {
         this.from = from;
         this.to = to;
         cost = Vector2.dst(from.getPosition().x, from.getPosition().y, to.getPosition().x, to.getPosition().y);
         line = new IsometricLine(from.getPosition(), to.getPosition());
+        if (isObstacle) {
+            cost += 1000;
+        }
     }
 
     public void draw(ShapeDrawer shapeDrawer, boolean inPath) {

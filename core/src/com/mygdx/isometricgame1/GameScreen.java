@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
 import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -12,10 +11,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.MapLayers;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.MapObjects;
-import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
@@ -26,8 +21,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
-import java.util.Iterator;
-
 public class GameScreen implements Screen {
 
     private final int VIEWPORT_WIDTH = 1600;
@@ -35,6 +28,8 @@ public class GameScreen implements Screen {
     private final int MAP_WIDTH;
     private final int MAP_HEIGHT;
     private final float cameraSpeed = 20;
+    // TODO refactor these and other constants into game class to remove duplication
+    private final boolean showFPS = true;
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
     Texture shapeDrawerColorWhite;
@@ -46,8 +41,6 @@ public class GameScreen implements Screen {
     // EntityManager
     EntityManager entityManager;
     Ant ant;
-    // TODO refactor these and other constants into game class to remove duplication
-    private boolean showFPS = false;
     private IsometricGame1 game;
     private ExtendViewport viewport;
     private OrthographicCamera camera;
@@ -104,7 +97,7 @@ public class GameScreen implements Screen {
 
         //update nav grid to reflect rock positions
         /* for (Rock rock : rocks) {
-         *//*  TODO better obstacle entity manegement
+         *//*  TODO better obstacle entity management
                 Rocks and other obstacles could have an index property that reflects their tile position.
                 Entity manager could store them in a hash map that is indexed by this formula:
                     y * MAP_WIDTH + x
@@ -125,7 +118,7 @@ public class GameScreen implements Screen {
         for (Rock rock : entityManager.getRocks()) {
             nodes.get(((int) rock.position.y * MAP_WIDTH + (int) rock.position.x)).setIsObstacle(true);
         }
-        //connect adjacent, non-obstacle nodes
+        //connect adjacent nodes
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 int currentIndex = (y * MAP_WIDTH) + x;
@@ -223,7 +216,7 @@ public class GameScreen implements Screen {
             Vector3 mousePositionUnprojected = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             Vector2 mousePosition = transformation.untransform(mousePositionUnprojected.x, mousePositionUnprojected.y);
             Vector2 goal = new Vector2(mousePosition.y, mousePosition.x);
-            Vector2 intersectionPosition = rayCaster.findIntersection(ant.getPosition(), goal);
+            Vector2 intersectionPosition = rayCaster.findIntersection(ant.getPosition(), goal, true);
             IsometricLine ray = new IsometricLine(ant.getPosition(), goal);
             game.spriteBatch.begin();
             if (intersectionPosition == null) {
@@ -267,13 +260,20 @@ public class GameScreen implements Screen {
             int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping these two
             //Gdx.app.log("clickTileX", "" + clickTileX);
             //Gdx.app.log("clickTileY", "" + clickTileY);
+            NavNode closestToClick = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
+            NavNode goal;
+            if (closestToClick.isObstacle()) {
 
-            //create NavNode goal from click position
-            NavNode goal = new NavNode(clickPosition.y, clickPosition.x);
-            //get NavNode that corresponds with the tile that was clicked
-            NavNode closestToGoal = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
+                Vector2 intersectionPosition = rayCaster.findIntersection(new Vector2(clickPosition.y, clickPosition.x), ant.getPosition(), false);
+                Utils.collide(ant.getCircle(), (int) intersectionPosition.x, (int) intersectionPosition.y, intersectionPosition);
+                goal = new NavNode(intersectionPosition.x, intersectionPosition.y);
+            } else {
+                goal = new NavNode(clickPosition.y, clickPosition.x);
+            }
             //add goal to navGraph
             navGraph.addNode(goal);
+            //get NavNode that corresponds with the goal tile
+            NavNode closestToGoal = navGraph.getNodes().get((int) (Math.floor(goal.getPosition().y) * MAP_WIDTH + Math.floor(goal.getPosition().x)));
             //assign it's connections to goal
             for (Connection<NavNode> connection :
                     navGraph.getConnections(closestToGoal)) {
@@ -293,7 +293,6 @@ public class GameScreen implements Screen {
             ant.setState(UnitState.WALKING);
             /*
             TODO delete start, goal and connections to them after the unit has reached it's goal
-            TODO debug rayCaster not detecting rock vertex vecinities as obstacles when standing next to rocks
              */
         }
 

@@ -6,8 +6,8 @@
     "activeFile": "map-1.tmx",
     "automapping.whileDrawing": true,
     "expandedProjectPaths": [
-        ".",
-        "object templates"
+        "object templates",
+        "."
     ],
     "fileStates": {
         "map-1.tmx": {

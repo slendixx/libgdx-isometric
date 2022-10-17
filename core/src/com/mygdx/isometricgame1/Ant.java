@@ -21,6 +21,7 @@ public class Ant extends Entity {
     private static final float IDLE_FRAME_DURATION = 1 / 10f;
     private static final float SPEED = 1.4f;
     private static final float ARRIVED_TO_TARGET_POSITION_DISTANCE = 0.05f;
+    private static final float RADIUS = 25;
     private static TextureAtlas walkingAtlas = new TextureAtlas(
             Gdx.files.internal("sprites/ant/ant-walking.atlas"));
     private static TextureAtlas idleAtlas = new TextureAtlas(
@@ -30,7 +31,6 @@ public class Ant extends Entity {
     private static float elapsedTime = 0;
     private final float ANIMATION_OFFSET_Y = 0.3f;
     private final float ANIMATION_OFFSET_X = 0.5f;
-    private final float RADIUS = 25;
     private final float UPDATE_FACING_DIRECTION_DELAY = 0.25f;
     private Vector2 positionScreen;
     // TODO remove duplication of this property
@@ -146,7 +146,7 @@ public class Ant extends Entity {
                  */
                 boolean entitiesCollided;
                 if (entity instanceof Rock) {
-                    entitiesCollided = collide(((Rock) entity).getSquare());
+                    entitiesCollided = Utils.collide(circle, ((Rock) entity).getSquare(), position);
                     if (entitiesCollided) {
                         this.setColliding(true);
                         entity.setColliding(true);
@@ -285,35 +285,5 @@ public class Ant extends Entity {
                 + Math.pow((distanceToSquareY - semiSquareLength), 2);
 
         return distanceToSquareCorner <= Math.pow(RADIUS, 2);
-    }
-
-    /**
-     * Applies vector-based collision to the calling instance.
-     *
-     * @param square
-     * @return true if collision was applied. false otherwise
-     */
-    public boolean collide(IsometricSquare square) {
-
-        Vector2 squarePosition = square.getPosition();
-        Vector2 circlePosition = this.circle.getPosition();
-
-        Vector2 nearestPoint = new Vector2(
-                (float) Math.max(squarePosition.x - 0.5, Math.min(squarePosition.x + 0.5, position.x)),
-                (float) Math.max(squarePosition.y - 0.5, Math.min(squarePosition.y + 0.5, position.y)));
-
-        float nearestY = 128 * (nearestPoint.y - circlePosition.y);
-        float nearestX = 128 * (nearestPoint.x - circlePosition.x);
-        Vector2 toNearest = new Vector2(nearestX, nearestY);
-        double distanceToNearestPoint = Math.sqrt(nearestX * nearestX +
-                nearestY * nearestY);
-
-        if (distanceToNearestPoint <= RADIUS + 1) {
-
-            position.sub(toNearest.nor().scl((float) (RADIUS -
-                    distanceToNearestPoint) / 128));
-            return true;
-        }
-        return false;
     }
 }
