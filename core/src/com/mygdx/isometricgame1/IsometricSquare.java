@@ -8,7 +8,7 @@ import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class IsometricSquare {
 
-    //TODO remove dupplication among isometric shape classes
+    //TODO remove duplication among isometric shape classes
     private static Color DEFAULT_COLOR = Color.WHITE;
     private float[] vertices;
     private Vector2 position;

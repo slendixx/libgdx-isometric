@@ -238,16 +238,9 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.justTouched()) {
             //ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
-
-
             //get ant tile
             int antTileX = (int) Math.floor(ant.getPosition().x);
             int antTileY = (int) Math.floor(ant.getPosition().y);
-            //Gdx.app.log("antTileX", "" + antTileX);
-            //Gdx.app.log("antTileY", "" + antTileY);
-            // Gdx.app.log("antX", "" + ant.getPosition().x);
-            // Gdx.app.log("antY", "" + ant.getPosition().y);
-            //create NavNode start from ant position
             NavNode start = new NavNode(ant.getPosition().x, ant.getPosition().y);
             //get NavNode that corresponds with the tile the ant is standing on
             NavNode closestToStart = navGraph.getNodes().get(antTileY * MAP_WIDTH + antTileX);
@@ -270,7 +263,6 @@ public class GameScreen implements Screen {
             NavNode closestToClick = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
             NavNode goal;
             if (closestToClick.isObstacle()) {
-
                 Vector2 intersectionPosition = rayCaster.findIntersection(new Vector2(clickPosition.y, clickPosition.x), ant.getPosition(), false);
                 Utils.collide(ant.getCircle(), (int) intersectionPosition.x, (int) intersectionPosition.y, intersectionPosition);
                 goal = new NavNode(intersectionPosition.x, intersectionPosition.y);

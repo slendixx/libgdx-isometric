@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import org.graalvm.compiler.core.common.util.Util;
 
 public class Ant extends Entity {
 
@@ -153,6 +154,16 @@ public class Ant extends Entity {
                     }
                 }
             }
+            //collide with world borders if ant is near them
+            if (position.x < 1)
+                Utils.collide(circle, new IsometricRectangle(-1, 0, 1, screen.getMapHeight()), position);
+            if (position.y < 1)
+                Utils.collide(circle, new IsometricRectangle(0, -1, screen.getMapWidth(), 1), position);
+            if (position.x > (screen.getMapWidth() - 1))
+                Utils.collide(circle, new IsometricRectangle(screen.getMapWidth(), 0, 1, screen.getMapHeight()), position);
+            if (position.y > (screen.getMapHeight() - 1))
+                Utils.collide(circle, new IsometricRectangle(0, screen.getMapHeight(), screen.getMapWidth(), 1), position);
+
 
             // Gdx.app.log("position", "x:" + antPosition.x + " y:" + antPosition.y);
             float distanceToTarget = position.dst(targetPosition);

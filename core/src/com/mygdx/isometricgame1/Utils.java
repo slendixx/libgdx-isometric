@@ -90,4 +90,31 @@ public class Utils {
         }
         return false;
     }
+
+    public static boolean collide(IsometricCircle circle, IsometricRectangle rectangle, Vector2 position) {
+
+        Vector2 squarePosition = rectangle.getPosition();
+        Vector2 circlePosition = circle.getPosition();
+        float halfWidth = (rectangle.getWidth() / 2.0f);
+        float halfHeight = (rectangle.getHeight() / 2.0f);
+
+        Vector2 nearestPoint = new Vector2(
+                (float) Math.max(squarePosition.x - halfWidth, Math.min(squarePosition.x + halfWidth, position.x)),
+                (float) Math.max(squarePosition.y - halfHeight, Math.min(squarePosition.y + halfHeight, position.y)));
+
+        float nearestY = 128 * (nearestPoint.y - circlePosition.y);
+        float nearestX = 128 * (nearestPoint.x - circlePosition.x);
+        Vector2 directionToNearest = new Vector2(nearestX, nearestY);
+        double distanceToNearestPoint = Math.sqrt(nearestX * nearestX +
+                nearestY * nearestY);
+
+        if (distanceToNearestPoint <= circle.getRadius() + 1) {
+
+            position.sub(directionToNearest.nor().scl((float) (circle.getRadius() -
+                    distanceToNearestPoint) / 128));
+            return true;
+        }
+        return false;
+    }
+
 }
