@@ -23,6 +23,11 @@ import space.earlygrey.shapedrawer.ShapeDrawer;
 
 public class GameScreen implements Screen {
 
+    /**
+     * to be subtracted to world-border-matching coordinates to prevent them from
+     * wrapping back to zero.
+     */
+    private final float ANTI_WRAP_MARGIN = 0.1f;
     private final int VIEWPORT_WIDTH = 1600;
     private final int VIEWPORT_HEIGHT = 900;
     private final int MAP_WIDTH;
@@ -233,16 +238,9 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.justTouched()) {
             //ant.updateFacingDirection(Utils.clickPositionToIso(Gdx.input.getX(), Gdx.input.getY(), camera));
-
-
             //get ant tile
             int antTileX = (int) Math.floor(ant.getPosition().x);
             int antTileY = (int) Math.floor(ant.getPosition().y);
-            //Gdx.app.log("antTileX", "" + antTileX);
-            //Gdx.app.log("antTileY", "" + antTileY);
-            // Gdx.app.log("antX", "" + ant.getPosition().x);
-            // Gdx.app.log("antY", "" + ant.getPosition().y);
-            //create NavNode start from ant position
             NavNode start = new NavNode(ant.getPosition().x, ant.getPosition().y);
             //get NavNode that corresponds with the tile the ant is standing on
             NavNode closestToStart = navGraph.getNodes().get(antTileY * MAP_WIDTH + antTileX);
@@ -256,14 +254,15 @@ public class GameScreen implements Screen {
             //get click position
             Vector3 clickUnprojected = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
             Vector2 clickPosition = transformation.untransform(clickUnprojected.x, clickUnprojected.y);
+            //clamp click position to map borders
+            //TODO implement a clamp utility
+            clickPosition.set(Math.max(0f, Math.min(MAP_HEIGHT - ANTI_WRAP_MARGIN, clickPosition.x)), Math.max(0f, Math.min(MAP_WIDTH - ANTI_WRAP_MARGIN, clickPosition.y)));
             int clickTileX = (int) Math.floor(clickPosition.y); //for some reason, untransforming these coordinates
-            int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping these two
-            //Gdx.app.log("clickTileX", "" + clickTileX);
-            //Gdx.app.log("clickTileY", "" + clickTileY);
+            int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping them
+
             NavNode closestToClick = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
             NavNode goal;
             if (closestToClick.isObstacle()) {
-
                 Vector2 intersectionPosition = rayCaster.findIntersection(new Vector2(clickPosition.y, clickPosition.x), ant.getPosition(), false);
                 Utils.collide(ant.getCircle(), (int) intersectionPosition.x, (int) intersectionPosition.y, intersectionPosition);
                 goal = new NavNode(intersectionPosition.x, intersectionPosition.y);
