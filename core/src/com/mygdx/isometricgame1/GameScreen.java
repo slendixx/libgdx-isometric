@@ -34,7 +34,7 @@ public class GameScreen implements Screen {
     private final int MAP_HEIGHT;
     private final float cameraSpeed = 20;
     // TODO refactor these and other constants into game class to remove duplication
-    private final boolean showFPS = true;
+    private final boolean showFPS = false;
     // shapeDrawer
     Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
     Texture shapeDrawerColorWhite;
@@ -264,6 +264,8 @@ public class GameScreen implements Screen {
             int clickTileY = (int) Math.floor(clickPosition.x); //ends up flipping them
 
             NavNode closestToClick = navGraph.getNodes().get(clickTileY * MAP_WIDTH + clickTileX);
+
+
             NavNode goal;
             if (closestToClick.isObstacle()) {
                 Vector2 intersectionPosition = rayCaster.findIntersection(new Vector2(clickPosition.y, clickPosition.x), ant.getPosition(), false);
@@ -276,23 +278,29 @@ public class GameScreen implements Screen {
             navGraph.addNode(goal);
             //get NavNode that corresponds with the goal tile
             NavNode closestToGoal = navGraph.getNodes().get((int) (Math.floor(goal.getPosition().y) * MAP_WIDTH + Math.floor(goal.getPosition().x)));
-            //assign it's connections to goal
-            for (Connection<NavNode> connection :
-                    navGraph.getConnections(closestToGoal)) {
-                navGraph.connectNodes(connection.getToNode(), goal);
+
+            if (closestToStart.getSubgraphId() != closestToGoal.getSubgraphId()) {
+                Gdx.app.log("Path", "goal is inaccessible");
+            } else {
+
+                //assign it's connections to goal
+                for (Connection<NavNode> connection :
+                        navGraph.getConnections(closestToGoal)) {
+                    navGraph.connectNodes(connection.getToNode(), goal);
+                }
+                //find path from start to goal
+                path = navGraph.findPath(start, goal);
+
+                //smooth path
+                path = pathSmoother.smooth(path);
+
+                //render path
+
+                //assign this new path to the ant's path property
+                ant.setPath(path);
+                //set ant state to WALKING
+                ant.setState(UnitState.WALKING);
             }
-            //find path from start to goal
-            path = navGraph.findPath(start, goal);
-
-            //smooth path
-            path = pathSmoother.smooth(path);
-
-            //render path
-
-            //assign this new path to the ant's path property
-            ant.setPath(path);
-            //set ant state to WALKING
-            ant.setState(UnitState.WALKING);
             /*
             TODO delete start, goal and connections to them after the unit has reached it's goal
              */
