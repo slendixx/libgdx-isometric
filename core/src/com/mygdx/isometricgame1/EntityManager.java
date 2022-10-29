@@ -90,6 +90,7 @@ public class EntityManager {
         return rocks.toArray(new Rock[0]);
     }
 
+    //TODO refactor as "init entities from map" or smt like that
     public void parseMap(TiledMap map) {
         //Read https://lightrun.com/answers/libgdx-libgdx-make-use-of-tiledmapobjects-templates
         MapLayers layers = map.getLayers();

@@ -95,6 +95,7 @@ public class GameScreen implements Screen {
         pixmap.dispose();
 
         entityManager = new EntityManager(this, game.spriteBatch, shapeDrawerWhite);
+
         entityManager.parseMap(map);
 
 
@@ -166,6 +167,8 @@ public class GameScreen implements Screen {
         //path = navGraph.findPath(nodes.get(0), nodes.get(156));
         rayCaster = new RayCaster(navGraph, MAP_WIDTH, MAP_HEIGHT);
         pathSmoother = new PathSmoother(rayCaster);
+
+        new BreadthFirstSearcher(navGraph).identifySubGraphs();
     }
 
     public TiledIsoTransformation getTransformation() {
@@ -296,14 +299,18 @@ public class GameScreen implements Screen {
         }
 
         //render nav graph
-        //game.spriteBatch.begin();
+        game.spriteBatch.begin();
         //for (NavConnection connection : navGraph.getConnections()) {
         //    connection.draw(shapeDrawerWhite, false);
         //}
-        //for (NavNode navNode : navGraph.getNodes()) {
-        //    navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, false);
-        //}
-        //game.spriteBatch.end();
+        for (NavNode navNode : navGraph.getNodes()) {
+            //navNode.draw(shapeDrawerWhite, game.spriteBatch, game.font, false);
+        }
+        Array<NavNode> nodes = navGraph.getNodes();
+        for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++) {
+            nodes.get(i).drawSubgraphIndex(game.spriteBatch, game.font);
+        }
+        game.spriteBatch.end();
         game.spriteBatch.begin();
         if (path != null) {
 

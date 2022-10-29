@@ -7,6 +7,8 @@ import com.badlogic.gdx.math.Vector2;
 
 import space.earlygrey.shapedrawer.ShapeDrawer;
 
+import java.util.Comparator;
+
 
 public class NavNode {
     private Vector2 position;
@@ -16,6 +18,7 @@ public class NavNode {
 
     private float labelScreenX;
     private float labelScreenY;
+    private int subgraphId;
 
     public NavNode(float x, float y) {
         position = new Vector2(x, y);
@@ -26,6 +29,15 @@ public class NavNode {
         Vector2 positionScreen = transformation.transform(position.x, position.y);
         labelScreenX = positionScreen.x;
         labelScreenY = positionScreen.y;
+        subgraphId = -1;
+    }
+
+    public int getSubgraphId() {
+        return subgraphId;
+    }
+
+    public void setSubgraphId(int subgraphId) {
+        this.subgraphId = subgraphId;
     }
 
     public boolean isObstacle() {
@@ -62,5 +74,10 @@ public class NavNode {
         circle.draw(shapeDrawer, inPath ? Color.GREEN : Color.WHITE);
         font.draw(batch, label, labelScreenX, labelScreenY);
     }
+
+    public void drawSubgraphIndex(SpriteBatch batch, BitmapFont font) {
+        font.draw(batch, "" + subgraphId, labelScreenX, labelScreenY);
+    }
+
 
 }
